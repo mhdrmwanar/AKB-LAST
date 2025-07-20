@@ -4,9 +4,44 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+// Cross-platform TouchableButton wrapper
+const TouchableButton = ({ children, onPress, style, disabled, ...props }) => {
+  if (Platform.OS === 'web') {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        style={({ pressed, hovered }) => [
+          style,
+          pressed && { opacity: 0.7 },
+          hovered && { opacity: 0.9 },
+          disabled && { opacity: 0.5 },
+        ]}
+        {...props}
+      >
+        {children}
+      </Pressable>
+    );
+  } else {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        style={style}
+        activeOpacity={0.7}
+        {...props}
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+};
 
 export default function HomeScreen({ navigation }) {
   return (
@@ -31,10 +66,13 @@ export default function HomeScreen({ navigation }) {
         </Text>
 
         {/* User Dashboard Card */}
-        <TouchableOpacity
-          style={[styles.dashboardCard, styles.userCard]}
+        <TouchableButton
+          style={[
+            styles.dashboardCard, 
+            styles.userCard,
+            Platform.OS === 'web' && { cursor: 'pointer' }
+          ]}
           onPress={() => navigation.navigate('UserDashboard')}
-          activeOpacity={0.9}
         >
           <View style={styles.cardGradient}>
             <View style={styles.cardIconContainer}>
@@ -87,13 +125,16 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="chevron-forward" size={24} color="#4CAF50" />
             </View>
           </View>
-        </TouchableOpacity>
+        </TouchableButton>
 
         {/* Admin Dashboard Card */}
-        <TouchableOpacity
-          style={[styles.dashboardCard, styles.adminCard]}
+        <TouchableButton
+          style={[
+            styles.dashboardCard, 
+            styles.adminCard,
+            Platform.OS === 'web' && { cursor: 'pointer' }
+          ]}
           onPress={() => navigation.navigate('TestAdminDashboard')}
-          activeOpacity={0.9}
         >
           <View style={styles.cardGradient}>
             <View style={styles.cardIconContainer}>
@@ -137,7 +178,7 @@ export default function HomeScreen({ navigation }) {
               <Ionicons name="chevron-forward" size={24} color="#FF9800" />
             </View>
           </View>
-        </TouchableOpacity>
+        </TouchableButton>
       </View>
 
       {/* Footer */}
@@ -152,10 +193,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+    ...(Platform.OS === 'web' && { height: '100vh' }),
   },
   header: {
     backgroundColor: '#1a237e',
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'web' ? 40 : 60,
     paddingBottom: 30,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 24,
@@ -198,11 +240,15 @@ const styles = StyleSheet.create({
   dashboardCard: {
     marginBottom: 20,
     borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.15)',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      elevation: 8,
+    }),
   },
   userCard: {
     backgroundColor: '#f0fdf4',

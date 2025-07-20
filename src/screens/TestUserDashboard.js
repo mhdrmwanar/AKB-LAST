@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   TextInput,
   ScrollView,
   Switch,
@@ -13,6 +14,54 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
+
+// Cross-platform Alert wrapper
+const showAlert = (title, message, buttons) => {
+  if (Platform.OS === 'web') {
+    if (buttons && buttons.length === 2) {
+      const result = window.confirm(`${title}\n\n${message}`);
+      if (result && buttons[1].onPress) {
+        buttons[1].onPress();
+      }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+    }
+  } else {
+    Alert.alert(title, message, buttons);
+  }
+};
+
+// Cross-platform TouchableButton wrapper
+const TouchableButton = ({ children, onPress, style, disabled, ...props }) => {
+  if (Platform.OS === 'web') {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        style={({ pressed }) => [
+          style,
+          pressed && { opacity: 0.7 },
+          disabled && { opacity: 0.5 },
+        ]}
+        {...props}
+      >
+        {children}
+      </Pressable>
+    );
+  } else {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        style={style}
+        activeOpacity={0.7}
+        {...props}
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+};
 
 export default function TestUserDashboard({ navigation }) {
   const { isAnonymous, setIsAnonymous, submitFeedback, stats } = useFeedback();
@@ -32,17 +81,17 @@ export default function TestUserDashboard({ navigation }) {
 
   const handleSubmit = async () => {
     if (!feedbackText.trim()) {
-      Alert.alert('Informasi Kurang', 'Silakan masukkan feedback Anda');
+      showAlert('Informasi Kurang', 'Silakan masukkan feedback Anda');
       return;
     }
 
     if (rating === 0) {
-      Alert.alert('Informasi Kurang', 'Silakan pilih rating');
+      showAlert('Informasi Kurang', 'Silakan pilih rating');
       return;
     }
 
     if (!isAnonymous && !name.trim()) {
-      Alert.alert(
+      showAlert(
         'Informasi Kurang',
         'Silakan masukkan nama Anda atau aktifkan mode anonim'
       );
@@ -60,7 +109,7 @@ export default function TestUserDashboard({ navigation }) {
       });
 
       if (success) {
-        Alert.alert('Terima Kasih!', 'Feedback Anda berhasil dikirim!', [
+        showAlert('Terima Kasih!', 'Feedback Anda berhasil dikirim!', [
           {
             text: 'Lihat Analitik',
             onPress: () => {
@@ -75,7 +124,7 @@ export default function TestUserDashboard({ navigation }) {
         ]);
       }
     } catch (error) {
-      Alert.alert('Gagal Mengirim', 'Silakan coba lagi nanti.');
+      showAlert('Gagal Mengirim', 'Silakan coba lagi nanti.');
     } finally {
       setIsSubmitting(false);
     }
@@ -94,17 +143,20 @@ export default function TestUserDashboard({ navigation }) {
         <Text style={styles.ratingLabel}>Beri nilai pengalaman Anda</Text>
         <View style={styles.stars}>
           {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity
+            <TouchableButton
               key={star}
               onPress={() => setRating(star)}
-              style={styles.star}
+              style={[
+                styles.star,
+                Platform.OS === 'web' && { cursor: 'pointer' }
+              ]}
             >
               <Ionicons
                 name={star <= rating ? 'star' : 'star-outline'}
                 size={32}
                 color={star <= rating ? '#FFD700' : '#DDD'}
               />
-            </TouchableOpacity>
+            </TouchableButton>
           ))}
         </View>
         {rating > 0 && (
@@ -127,24 +179,30 @@ export default function TestUserDashboard({ navigation }) {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <TouchableButton
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            Platform.OS === 'web' && { cursor: 'pointer' }
+          ]}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
+        </TouchableButton>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Kirim Feedback</Text>
           <Text style={styles.headerSubtitle}>
             Bantu kami meningkatkan layanan
           </Text>
         </View>
-        <TouchableOpacity
+        <TouchableButton
           onPress={() => navigation.navigate('AdminDashboard')}
-          style={styles.analyticsButton}
+          style={[
+            styles.analyticsButton,
+            Platform.OS === 'web' && { cursor: 'pointer' }
+          ]}
         >
           <Ionicons name="analytics" size={20} color="#fff" />
-        </TouchableOpacity>
+        </TouchableButton>
       </View>
 
       {/* Stats Bar */}
@@ -208,7 +266,7 @@ export default function TestUserDashboard({ navigation }) {
           <Text style={styles.sectionTitle}>Kategori Feedback</Text>
           <View style={styles.categoryGrid}>
             {categories.map((category) => (
-              <TouchableOpacity
+              <TouchableButton
                 key={category.id}
                 style={[
                   styles.categoryCard,
@@ -217,6 +275,7 @@ export default function TestUserDashboard({ navigation }) {
                     borderColor: category.color,
                     borderWidth: 2,
                   },
+                  Platform.OS === 'web' && { cursor: 'pointer' }
                 ]}
                 onPress={() => setSelectedCategory(category.id)}
               >
@@ -238,7 +297,7 @@ export default function TestUserDashboard({ navigation }) {
                 >
                   {category.label}
                 </Text>
-              </TouchableOpacity>
+              </TouchableButton>
             ))}
           </View>
         </View>
@@ -264,10 +323,11 @@ export default function TestUserDashboard({ navigation }) {
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity
+        <TouchableButton
           style={[
             styles.submitButton,
             isSubmitting && styles.submitButtonDisabled,
+            Platform.OS === 'web' && { cursor: isSubmitting ? 'not-allowed' : 'pointer' }
           ]}
           onPress={handleSubmit}
           disabled={isSubmitting}
@@ -283,7 +343,7 @@ export default function TestUserDashboard({ navigation }) {
               <Text style={styles.submitButtonText}>Kirim Feedback</Text>
             </>
           )}
-        </TouchableOpacity>
+        </TouchableButton>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -295,15 +355,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    height: '100vh', // For web compatibility
+    ...(Platform.OS === 'web' && { height: '100vh' }),
   },
   header: {
     backgroundColor: '#2196F3',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'web' ? 30 : 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 4,
+    }),
   },
   backButton: {
     padding: 8,
@@ -363,11 +432,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    }),
   },
   sectionTitle: {
     fontSize: 18,
@@ -430,6 +503,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05)',
+      transition: 'all 0.2s ease-in-out',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 1,
+    }),
   },
   categoryLabel: {
     fontSize: 14,

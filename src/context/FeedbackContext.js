@@ -1,5 +1,52 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+// Platform-specific storage wrapper
+const storage = {
+  async getItem(key) {
+    try {
+      if (Platform.OS === 'web') {
+        return localStorage.getItem(key);
+      } else {
+        return await AsyncStorage.getItem(key);
+      }
+    } catch (error) {
+      console.log('Storage getItem error:', error);
+      return null;
+    }
+  },
+
+  async setItem(key, value) {
+    try {
+      if (Platform.OS === 'web') {
+        localStorage.setItem(key, value);
+        return true;
+      } else {
+        await AsyncStorage.setItem(key, value);
+        return true;
+      }
+    } catch (error) {
+      console.log('Storage setItem error:', error);
+      return false;
+    }
+  },
+
+  async removeItem(key) {
+    try {
+      if (Platform.OS === 'web') {
+        localStorage.removeItem(key);
+        return true;
+      } else {
+        await AsyncStorage.removeItem(key);
+        return true;
+      }
+    } catch (error) {
+      console.log('Storage removeItem error:', error);
+      return false;
+    }
+  },
+};
 
 const FeedbackContext = createContext();
 
@@ -22,11 +69,57 @@ export const FeedbackProvider = ({ children }) => {
     neutral: 0,
     anonymous: 0,
     averageRating: 0,
+    satisfactionRate: 0,
   });
 
   // Load saved feedbacks on app start
   useEffect(() => {
     loadFeedbacks();
+
+    // Add some test data if no data exists (for development)
+    setTimeout(() => {
+      if (feedbacks.length === 0) {
+        console.log('Adding test data...');
+        const testData = [
+          {
+            id: 'test-1',
+            rating: 5,
+            text: 'Layanan sangat memuaskan dan cepat',
+            message: 'Layanan sangat memuaskan dan cepat',
+            name: 'User Test 1',
+            category: 'service',
+            isAnonymous: false,
+            sentiment: 'positive',
+            timestamp: new Date().toISOString(),
+          },
+          {
+            id: 'test-2',
+            rating: 4,
+            text: 'Produk bagus tapi harga agak mahal',
+            message: 'Produk bagus tapi harga agak mahal',
+            name: 'User Test 2',
+            category: 'product',
+            isAnonymous: false,
+            sentiment: 'neutral',
+            timestamp: new Date().toISOString(),
+          },
+          {
+            id: 'test-3',
+            rating: 3,
+            text: 'Biasa saja, tidak ada yang istimewa',
+            message: 'Biasa saja, tidak ada yang istimewa',
+            name: '',
+            category: 'general',
+            isAnonymous: true,
+            sentiment: 'neutral',
+            timestamp: new Date().toISOString(),
+          },
+        ];
+
+        console.log('Setting test data:', testData);
+        setFeedbacks(testData);
+      }
+    }, 1000);
   }, []);
 
   // Update stats when feedbacks change
@@ -37,9 +130,13 @@ export const FeedbackProvider = ({ children }) => {
 
   const loadFeedbacks = async () => {
     try {
-      const saved = await AsyncStorage.getItem('feedbacks');
+      console.log('Loading feedbacks for platform:', Platform.OS);
+      const saved = await storage.getItem('feedbacks');
+      console.log('Loaded data:', saved ? 'found' : 'not found');
       if (saved) {
-        setFeedbacks(JSON.parse(saved));
+        const parsedFeedbacks = JSON.parse(saved);
+        console.log('Parsed feedbacks count:', parsedFeedbacks.length);
+        setFeedbacks(parsedFeedbacks);
       }
     } catch (error) {
       console.log('Error loading feedbacks:', error);
@@ -48,7 +145,17 @@ export const FeedbackProvider = ({ children }) => {
 
   const saveFeedbacks = async () => {
     try {
-      await AsyncStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+      console.log(
+        'Saving feedbacks for platform:',
+        Platform.OS,
+        'count:',
+        feedbacks.length
+      );
+      const success = await storage.setItem(
+        'feedbacks',
+        JSON.stringify(feedbacks)
+      );
+      console.log('Save result:', success ? 'success' : 'failed');
     } catch (error) {
       console.log('Error saving feedbacks:', error);
     }
@@ -103,6 +210,7 @@ export const FeedbackProvider = ({ children }) => {
       .filter(
         (word) =>
           ![
+            // English stop words
             'this',
             'that',
             'with',
@@ -178,6 +286,32 @@ export const FeedbackProvider = ({ children }) => {
             'she',
             'too',
             'use',
+            // Indonesian stop words
+            'yang',
+            'dan',
+            'ini',
+            'itu',
+            'untuk',
+            'dari',
+            'dengan',
+            'pada',
+            'akan',
+            'atau',
+            'dalam',
+            'adalah',
+            'tidak',
+            'ada',
+            'sudah',
+            'masih',
+            'juga',
+            'dapat',
+            'bisa',
+            'harus',
+            'saya',
+            'anda',
+            'kita',
+            'mereka',
+            'dia',
           ].includes(word)
       );
 
@@ -189,7 +323,7 @@ export const FeedbackProvider = ({ children }) => {
     return Object.entries(wordCount)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 20)
-      .map(([word, count]) => ({ word, count }));
+      .map(([word, count]) => ({ text: word, value: count }));
   };
 
   const updateStats = () => {
@@ -198,8 +332,21 @@ export const FeedbackProvider = ({ children }) => {
     const negative = feedbacks.filter((f) => f.sentiment === 'negative').length;
     const neutral = feedbacks.filter((f) => f.sentiment === 'neutral').length;
     const anonymous = feedbacks.filter((f) => f.isAnonymous).length;
+
     const averageRating =
-      total > 0 ? feedbacks.reduce((sum, f) => sum + f.rating, 0) / total : 0;
+      total > 0
+        ? feedbacks.reduce((sum, f) => {
+            const rating = Number(f.rating) || 0;
+            return sum + rating;
+          }, 0) / total
+        : 0;
+
+    // Calculate satisfaction rate (rating 4+ stars)
+    const satisfiedCount = feedbacks.filter(
+      (f) => Number(f.rating) >= 4
+    ).length;
+    const satisfactionRate =
+      total > 0 ? Math.round((satisfiedCount / total) * 100) : 0;
 
     setStats({
       total,
@@ -208,6 +355,7 @@ export const FeedbackProvider = ({ children }) => {
       neutral,
       anonymous,
       averageRating: Math.round(averageRating * 10) / 10,
+      satisfactionRate,
     });
   };
 
@@ -217,6 +365,7 @@ export const FeedbackProvider = ({ children }) => {
         id: Date.now().toString(),
         ...feedbackData,
         message: feedbackData.text,
+        rating: Number(feedbackData.rating) || 0, // Ensure rating is a number
         isAnonymous: isAnonymous,
         sentiment: analyzeSentiment(feedbackData.text),
         timestamp: new Date().toISOString(),
@@ -231,9 +380,12 @@ export const FeedbackProvider = ({ children }) => {
   };
 
   const clearAllFeedbacks = async () => {
-    setFeedbacks([]);
     try {
-      await AsyncStorage.removeItem('feedbacks');
+      console.log('Clearing all feedbacks for platform:', Platform.OS);
+      setFeedbacks([]);
+      const success = await storage.removeItem('feedbacks');
+      console.log('Clear storage result:', success ? 'success' : 'failed');
+
       // Reset stats when clearing
       setStats({
         total: 0,
@@ -242,9 +394,62 @@ export const FeedbackProvider = ({ children }) => {
         neutral: 0,
         anonymous: 0,
         averageRating: 0,
+        satisfactionRate: 0,
       });
+      return true;
     } catch (error) {
       console.log('Error clearing feedbacks:', error);
+      return false;
+    }
+  };
+
+  const deleteFeedback = async (feedbackId) => {
+    try {
+      console.log('deleteFeedback called with ID:', feedbackId);
+      console.log(
+        'Current feedbacks before delete:',
+        feedbacks.map((f) => ({ id: f.id, text: f.text?.substring(0, 20) }))
+      );
+
+      const originalLength = feedbacks.length;
+
+      setFeedbacks((prev) => {
+        const filtered = prev.filter((feedback) => {
+          const shouldKeep = feedback.id !== feedbackId;
+          console.log(
+            `Feedback ${feedback.id}: ${shouldKeep ? 'keeping' : 'DELETING'}`
+          );
+          return shouldKeep;
+        });
+        console.log(
+          `Filter result: ${filtered.length} items (was ${originalLength})`
+        );
+
+        // Force a re-render by creating new array
+        return [...filtered];
+      });
+
+      // Also update storage immediately for web compatibility
+      setTimeout(async () => {
+        try {
+          const updatedFeedbacks = feedbacks.filter((f) => f.id !== feedbackId);
+          const success = await storage.setItem(
+            'feedbacks',
+            JSON.stringify(updatedFeedbacks)
+          );
+          console.log(
+            'Storage updated after delete:',
+            success ? 'success' : 'failed'
+          );
+        } catch (error) {
+          console.log('Error updating storage:', error);
+        }
+      }, 100);
+
+      return true;
+    } catch (error) {
+      console.log('Error deleting feedback:', error);
+      return false;
     }
   };
 
@@ -256,6 +461,7 @@ export const FeedbackProvider = ({ children }) => {
     setIsAnonymous,
     submitFeedback,
     clearAllFeedbacks,
+    deleteFeedback,
     generateWordCloud,
   };
 

@@ -7,15 +7,74 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Platform,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
 
+// Cross-platform Alert wrapper
+const showAlert = (title, message, buttons) => {
+  if (Platform.OS === 'web') {
+    // For web, use window.confirm for simple dialogs
+    if (buttons && buttons.length === 2) {
+      const result = window.confirm(`${title}\n\n${message}`);
+      if (result && buttons[1].onPress) {
+        buttons[1].onPress();
+      }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+    }
+  } else {
+    // For mobile, use React Native Alert
+    Alert.alert(title, message, buttons);
+  }
+};
+
+// Cross-platform TouchableButton wrapper
+const TouchableButton = ({ children, onPress, style, disabled, ...props }) => {
+  if (Platform.OS === 'web') {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        style={({ pressed }) => [
+          style,
+          pressed && { opacity: 0.7 },
+          disabled && { opacity: 0.5 },
+        ]}
+        {...props}
+      >
+        {children}
+      </Pressable>
+    );
+  } else {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        style={style}
+        activeOpacity={0.7}
+        {...props}
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+};
+
 export default function TestAdminDashboard({ navigation }) {
-  const { feedbacks, stats, generateWordCloud, clearAllFeedbacks } =
-    useFeedback();
+  const {
+    feedbacks,
+    stats,
+    generateWordCloud,
+    clearAllFeedbacks,
+    deleteFeedback,
+  } = useFeedback();
   const [refreshing, setRefreshing] = useState(false);
   const [wordCloudData, setWordCloudData] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     const data = generateWordCloud();
@@ -27,6 +86,52 @@ export default function TestAdminDashboard({ navigation }) {
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);
+  };
+
+  const handleDeleteFeedback = (feedbackId, feedbackText) => {
+    if (isDeleting) return; // Prevent multiple clicks
+
+    console.log('handleDeleteFeedback called with:', {
+      feedbackId,
+      feedbackText,
+      feedbacksCount: feedbacks.length,
+    });
+
+    if (!feedbackId) {
+      showAlert('Error', 'ID feedback tidak ditemukan');
+      return;
+    }
+
+    showAlert(
+      'Hapus Feedback',
+      `Apakah Anda yakin ingin menghapus feedback: "${feedbackText?.substring(
+        0,
+        50
+      )}${feedbackText?.length > 50 ? '...' : ''}"?`,
+      [
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            console.log('User confirmed delete for platform:', Platform.OS);
+            setIsDeleting(true);
+            console.log('Attempting to delete feedback ID:', feedbackId);
+            const success = await deleteFeedback(feedbackId);
+            setIsDeleting(false);
+
+            if (success) {
+              showAlert('Berhasil', 'Feedback berhasil dihapus');
+            } else {
+              showAlert('Error', 'Gagal menghapus feedback');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getCategoryStats = () => {
@@ -229,49 +334,107 @@ export default function TestAdminDashboard({ navigation }) {
     );
   };
 
-  const renderRecentFeedback = () => {
-    const recentFeedback = feedbacks.slice(-5).reverse();
+  const renderAllFeedback = () => {
+    const allFeedback = feedbacks.slice().reverse(); // Show newest first
+
+    console.log(
+      'renderAllFeedback - feedbacks data:',
+      feedbacks.map((f) => ({
+        id: f.id,
+        hasId: !!f.id,
+        text: f.text?.substring(0, 20),
+      }))
+    );
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Feedback Terbaru</Text>
-          <Text style={styles.cardSubtitle}>Feedback terkini yang masuk</Text>
+          <Text style={styles.cardTitle}>Semua Feedback</Text>
+          <Text style={styles.cardSubtitle}>
+            {feedbacks.length > 0
+              ? `${feedbacks.length} feedback total`
+              : 'Belum ada feedback'}
+          </Text>
         </View>
-        {recentFeedback.length > 0 ? (
-          recentFeedback.map((item, index) => (
-            <View key={index} style={styles.feedbackItem}>
-              <View style={styles.feedbackHeader}>
-                <Text style={styles.feedbackName}>{item.name}</Text>
-                <View style={styles.feedbackRating}>
-                  {[1, 2, 3, 4, 5].map((star) => (
+        {allFeedback.length > 0 ? (
+          allFeedback.map((item, index) => {
+            const feedbackId = item.id || `feedback-${index}-${Date.now()}`;
+            console.log('Rendering feedback:', {
+              id: feedbackId,
+              originalId: item.id,
+              text: item.text?.substring(0, 20),
+            });
+
+            return (
+              <View key={feedbackId} style={styles.feedbackItem}>
+                <View style={styles.feedbackHeader}>
+                  <View style={styles.feedbackHeaderLeft}>
+                    <Text style={styles.feedbackName}>
+                      {item.isAnonymous ? 'Anonim' : item.name || 'Pengguna'}
+                    </Text>
+                    <View style={styles.feedbackRating}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Ionicons
+                          key={star}
+                          name={star <= item.rating ? 'star' : 'star-outline'}
+                          size={12}
+                          color={star <= item.rating ? '#FFD700' : '#DDD'}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <TouchableButton
+                    style={[
+                      styles.deleteButton,
+                      isDeleting && styles.deleteButtonDisabled,
+                      Platform.OS === 'web' && { cursor: isDeleting ? 'not-allowed' : 'pointer' },
+                    ]}
+                    onPress={() =>
+                      handleDeleteFeedback(
+                        feedbackId,
+                        item.message || item.text
+                      )
+                    }
+                    disabled={isDeleting}
+                  >
                     <Ionicons
-                      key={star}
-                      name={star <= item.rating ? 'star' : 'star-outline'}
-                      size={12}
-                      color={star <= item.rating ? '#FFD700' : '#DDD'}
+                      name={isDeleting ? 'hourglass-outline' : 'trash-outline'}
+                      size={16}
+                      color={isDeleting ? '#ccc' : '#F44336'}
                     />
-                  ))}
+                  </TouchableButton>
+                </View>
+                <Text style={styles.feedbackText} numberOfLines={3}>
+                  {item.message || item.text}
+                </Text>
+                <View style={styles.feedbackMeta}>
+                  <Text style={styles.feedbackCategory}>
+                    {item.category === 'general'
+                      ? 'Umum'
+                      : item.category === 'service'
+                      ? 'Layanan'
+                      : item.category === 'product'
+                      ? 'Produk'
+                      : item.category === 'suggestion'
+                      ? 'Saran'
+                      : item.category?.charAt(0).toUpperCase() +
+                          item.category?.slice(1) || 'Umum'}
+                  </Text>
+                  <Text style={styles.feedbackTime}>
+                    {new Date(item.timestamp).toLocaleDateString('id-ID')}{' '}
+                    {new Date(item.timestamp).toLocaleTimeString('id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Text>
                 </View>
               </View>
-              <Text style={styles.feedbackText} numberOfLines={2}>
-                {item.text}
-              </Text>
-              <View style={styles.feedbackMeta}>
-                <Text style={styles.feedbackCategory}>
-                  {item.category?.charAt(0).toUpperCase() +
-                    item.category?.slice(1)}
-                </Text>
-                <Text style={styles.feedbackTime}>
-                  {new Date(item.timestamp).toLocaleTimeString()}
-                </Text>
-              </View>
-            </View>
-          ))
+            );
+          })
         ) : (
           <View style={styles.emptyFeedback}>
             <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>Belum ada feedback terbaru</Text>
+            <Text style={styles.emptyText}>Belum ada feedback</Text>
           </View>
         )}
       </View>
@@ -282,22 +445,22 @@ export default function TestAdminDashboard({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <TouchableButton
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={[styles.backButton, Platform.OS === 'web' && { cursor: 'pointer' }]}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
+        </TouchableButton>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Dashboard Analitik</Text>
           <Text style={styles.headerSubtitle}>Wawasan feedback real-time</Text>
         </View>
-        <TouchableOpacity
+        <TouchableButton
           onPress={() => navigation.navigate('UserDashboard')}
-          style={styles.addButton}
+          style={[styles.addButton, Platform.OS === 'web' && { cursor: 'pointer' }]}
         >
           <Ionicons name="add" size={20} color="#fff" />
-        </TouchableOpacity>
+        </TouchableButton>
       </View>
 
       <ScrollView
@@ -320,14 +483,14 @@ export default function TestAdminDashboard({ navigation }) {
           )}
           {renderStatCard(
             'Rating Rata-rata',
-            stats.averageRating || '0',
+            stats.averageRating ? stats.averageRating.toFixed(1) : '0.0',
             'Dari 5 bintang',
             'star',
             '#FFD700'
           )}
           {renderStatCard(
             'Kepuasan',
-            stats.satisfactionRate || '0%',
+            `${stats.satisfactionRate || 0}%`,
             'Rating 4+ bintang',
             'happy',
             '#4CAF50'
@@ -345,14 +508,17 @@ export default function TestAdminDashboard({ navigation }) {
         {renderWordCloud()}
         {renderCategoryAnalysis()}
         {renderRatingDistribution()}
-        {renderRecentFeedback()}
+        {renderAllFeedback()}
 
         {/* Clear Data Button */}
         {stats.total > 0 && (
-          <TouchableOpacity
-            style={styles.clearButton}
+          <TouchableButton
+            style={[
+              styles.clearButton, 
+              Platform.OS === 'web' && { cursor: 'pointer' }
+            ]}
             onPress={() => {
-              Alert.alert(
+              showAlert(
                 'Hapus Semua Data',
                 'Apakah Anda yakin ingin menghapus semua data feedback? Tindakan ini tidak dapat dibatalkan.',
                 [
@@ -363,7 +529,21 @@ export default function TestAdminDashboard({ navigation }) {
                   {
                     text: 'Hapus',
                     style: 'destructive',
-                    onPress: () => clearAllFeedbacks(),
+                    onPress: async () => {
+                      console.log(
+                        'User confirmed clear all for platform:',
+                        Platform.OS
+                      );
+                      const success = await clearAllFeedbacks();
+                      if (success) {
+                        showAlert(
+                          'Berhasil',
+                          'Semua data feedback berhasil dihapus'
+                        );
+                      } else {
+                        showAlert('Error', 'Gagal menghapus data feedback');
+                      }
+                    },
                   },
                 ]
               );
@@ -371,7 +551,7 @@ export default function TestAdminDashboard({ navigation }) {
           >
             <Ionicons name="trash" size={16} color="#F44336" />
             <Text style={styles.clearButtonText}>Hapus Semua Data</Text>
-          </TouchableOpacity>
+          </TouchableButton>
         )}
 
         <View style={styles.bottomPadding} />
@@ -384,15 +564,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    height: '100vh', // For web compatibility
+    ...(Platform.OS === 'web' && {
+      height: '100vh',
+      minHeight: '100vh',
+    }),
   },
   header: {
     backgroundColor: '#2196F3',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'web' ? 20 : 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    }),
   },
   backButton: {
     padding: 8,
@@ -417,7 +603,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    maxHeight: 'calc(100vh - 120px)', // Subtract header height
+    ...(Platform.OS === 'web' && {
+      maxHeight: 'calc(100vh - 120px)',
+      overflowY: 'auto',
+    }),
   },
   contentContainer: {
     paddingBottom: 40,
@@ -436,11 +625,19 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    // Cross-platform shadows
+    ...(Platform.OS === 'web' 
+      ? {
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }
+    ),
   },
   statCardContent: {
     flexDirection: 'row',
@@ -476,11 +673,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    // Cross-platform shadows
+    ...(Platform.OS === 'web' 
+      ? {
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }
+    ),
   },
   cardHeader: {
     marginBottom: 20,
@@ -613,6 +818,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  feedbackHeaderLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginRight: 8,
+  },
   feedbackName: {
     fontSize: 16,
     fontWeight: '500',
@@ -620,6 +832,29 @@ const styles = StyleSheet.create({
   },
   feedbackRating: {
     flexDirection: 'row',
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#F44336',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 32,
+    minHeight: 32,
+    // Cross-platform touch feedback
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        backgroundColor: '#FFF5F5',
+      },
+    }),
+  },
+  deleteButtonDisabled: {
+    opacity: 0.5,
+    borderColor: '#ccc',
   },
   feedbackText: {
     fontSize: 14,
@@ -657,6 +892,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginVertical: 20,
     marginHorizontal: 20,
+    // Cross-platform touch feedback
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        backgroundColor: '#FFF5F5',
+        borderColor: '#E53935',
+      },
+    }),
   },
   clearButtonText: {
     fontSize: 16,
