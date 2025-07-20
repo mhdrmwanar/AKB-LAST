@@ -75,51 +75,6 @@ export const FeedbackProvider = ({ children }) => {
   // Load saved feedbacks on app start
   useEffect(() => {
     loadFeedbacks();
-
-    // Add some test data if no data exists (for development)
-    setTimeout(() => {
-      if (feedbacks.length === 0) {
-        console.log('Adding test data...');
-        const testData = [
-          {
-            id: 'test-1',
-            rating: 5,
-            text: 'Layanan sangat memuaskan dan cepat',
-            message: 'Layanan sangat memuaskan dan cepat',
-            name: 'User Test 1',
-            category: 'service',
-            isAnonymous: false,
-            sentiment: 'positive',
-            timestamp: new Date().toISOString(),
-          },
-          {
-            id: 'test-2',
-            rating: 4,
-            text: 'Produk bagus tapi harga agak mahal',
-            message: 'Produk bagus tapi harga agak mahal',
-            name: 'User Test 2',
-            category: 'product',
-            isAnonymous: false,
-            sentiment: 'neutral',
-            timestamp: new Date().toISOString(),
-          },
-          {
-            id: 'test-3',
-            rating: 3,
-            text: 'Biasa saja, tidak ada yang istimewa',
-            message: 'Biasa saja, tidak ada yang istimewa',
-            name: '',
-            category: 'general',
-            isAnonymous: true,
-            sentiment: 'neutral',
-            timestamp: new Date().toISOString(),
-          },
-        ];
-
-        console.log('Setting test data:', testData);
-        setFeedbacks(testData);
-      }
-    }, 1000);
   }, []);
 
   // Update stats when feedbacks change

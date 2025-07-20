@@ -159,7 +159,7 @@ export default function TestAdminDashboard({ navigation }) {
         </Text>
       </View>
       <View style={styles.wordCloudContainer}>
-        {wordCloudData.length > 0 ? (
+        {feedbacks.length > 0 && wordCloudData.length > 0 ? (
           wordCloudData.map((word, index) => {
             const fontSize = Math.max(12, 20 - index * 1);
             const opacity = Math.max(0.5, 1 - index * 0.04);
@@ -174,7 +174,9 @@ export default function TestAdminDashboard({ navigation }) {
         ) : (
           <View style={styles.emptyWordCloud}>
             <Ionicons name="chatbubble-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>Belum ada data feedback</Text>
+            <Text style={styles.emptyText}>
+              Belum ada kata untuk ditampilkan
+            </Text>
           </View>
         )}
       </View>
@@ -252,7 +254,10 @@ export default function TestAdminDashboard({ navigation }) {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>Data kategori tidak tersedia</Text>
+          <View style={styles.emptyWordCloud}>
+            <Ionicons name="pie-chart-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>Belum ada data kategori</Text>
+          </View>
         )}
       </View>
     );
@@ -270,33 +275,40 @@ export default function TestAdminDashboard({ navigation }) {
             Bagaimana pengguna menilai pengalaman mereka
           </Text>
         </View>
-        <View style={styles.ratingChart}>
-          {[5, 4, 3, 2, 1].map((rating) => (
-            <View key={rating} style={styles.ratingRow}>
-              <Text style={styles.ratingLabel}>{rating} ⭐</Text>
-              <View style={styles.ratingBarContainer}>
-                <View
-                  style={[
-                    styles.ratingBar,
-                    {
-                      width:
-                        maxCount > 0
-                          ? `${(distribution[rating] / maxCount) * 100}%`
-                          : '0%',
-                      backgroundColor:
-                        rating >= 4
-                          ? '#4CAF50'
-                          : rating >= 3
-                          ? '#FF9800'
-                          : '#F44336',
-                    },
-                  ]}
-                />
+        {stats.total > 0 ? (
+          <View style={styles.ratingChart}>
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <View key={rating} style={styles.ratingRow}>
+                <Text style={styles.ratingLabel}>{rating} ⭐</Text>
+                <View style={styles.ratingBarContainer}>
+                  <View
+                    style={[
+                      styles.ratingBar,
+                      {
+                        width:
+                          maxCount > 0
+                            ? `${(distribution[rating] / maxCount) * 100}%`
+                            : '0%',
+                        backgroundColor:
+                          rating >= 4
+                            ? '#4CAF50'
+                            : rating >= 3
+                            ? '#FF9800'
+                            : '#F44336',
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.ratingCount}>{distribution[rating]}</Text>
               </View>
-              <Text style={styles.ratingCount}>{distribution[rating]}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyWordCloud}>
+            <Ionicons name="bar-chart-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>Belum ada rating</Text>
+          </View>
+        )}
       </View>
     );
   };
@@ -442,29 +454,31 @@ export default function TestAdminDashboard({ navigation }) {
         <View style={styles.statsGrid}>
           {renderStatCard(
             'Total Tanggapan',
-            stats.total.toString(),
-            'Semua feedback',
+            stats.total > 0 ? stats.total.toString() : '-',
+            stats.total > 0 ? 'Semua feedback' : 'Belum ada feedback',
             'people',
             '#2196F3'
           )}
           {renderStatCard(
             'Rating Rata-rata',
-            stats.averageRating ? stats.averageRating.toFixed(1) : '0.0',
-            'Dari 5 bintang',
+            stats.total > 0 && stats.averageRating
+              ? stats.averageRating.toFixed(1)
+              : '-',
+            stats.total > 0 ? 'Dari 5 bintang' : 'Belum ada rating',
             'star',
             '#FFD700'
           )}
           {renderStatCard(
             'Kepuasan',
-            `${stats.satisfactionRate || 0}%`,
-            'Rating 4+ bintang',
+            stats.total > 0 ? `${stats.satisfactionRate || 0}%` : '-',
+            stats.total > 0 ? 'Rating 4+ bintang' : 'Belum ada data',
             'happy',
             '#4CAF50'
           )}
           {renderStatCard(
             'Anonim',
-            stats.anonymous.toString(),
-            'Feedback pribadi',
+            stats.total > 0 ? stats.anonymous.toString() : '-',
+            stats.total > 0 ? 'Feedback pribadi' : 'Belum ada data',
             'shield',
             '#9C27B0'
           )}
