@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
 
 export default function TestUserDashboard({ navigation }) {
-  const { isAnonymous, setIsAnonymous, submitFeedback, stats, isOnline } = useFeedback();
+  const { isAnonymous, setIsAnonymous, submitFeedback, stats } = useFeedback();
 
   const [name, setName] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
@@ -136,7 +136,7 @@ export default function TestUserDashboard({ navigation }) {
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Kirim Feedback</Text>
           <Text style={styles.headerSubtitle}>
-            Bantu kami meningkatkan layanan • {Platform.OS === 'web' ? 'Web' : 'Android'} • {isOnline ? '🟢 Online' : '🔴 Offline'}
+            Bantu kami meningkatkan layanan
           </Text>
         </View>
         <TouchableOpacity

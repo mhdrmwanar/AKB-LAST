@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import apiService from '../services/apiService';
 
-// Shared data key untuk semua platform
-const SHARED_DATA_KEY = 'akb_feedbacks_shared';
-
-// Platform-specific storage wrapper with sync capabilities
+// Platform-specific storage wrapper
 const storage = {
   async getItem(key) {
     try {
@@ -25,13 +21,9 @@ const storage = {
     try {
       if (Platform.OS === 'web') {
         localStorage.setItem(key, value);
-        // Also try to sync with a shared key for cross-platform access
-        localStorage.setItem(SHARED_DATA_KEY, value);
         return true;
       } else {
         await AsyncStorage.setItem(key, value);
-        // Try to set shared key for potential web access
-        await AsyncStorage.setItem(SHARED_DATA_KEY, value);
         return true;
       }
     } catch (error) {
@@ -44,58 +36,14 @@ const storage = {
     try {
       if (Platform.OS === 'web') {
         localStorage.removeItem(key);
-        localStorage.removeItem(SHARED_DATA_KEY);
         return true;
       } else {
         await AsyncStorage.removeItem(key);
-        await AsyncStorage.removeItem(SHARED_DATA_KEY);
         return true;
       }
     } catch (error) {
       console.log('Storage removeItem error:', error);
       return false;
-    }
-  },
-
-  // Sync function untuk mendapatkan data terbaru dari platform manapun
-  async syncData() {
-    try {
-      console.log('Syncing data across platforms...');
-      
-      // Coba ambil data dari shared key
-      const sharedData = await this.getItem(SHARED_DATA_KEY);
-      const regularData = await this.getItem('feedbacks');
-      
-      // Gunakan data yang lebih baru atau yang ada
-      let finalData = null;
-      
-      if (sharedData && regularData) {
-        const sharedParsed = JSON.parse(sharedData);
-        const regularParsed = JSON.parse(regularData);
-        
-        // Gunakan yang memiliki lebih banyak data atau timestamp terbaru
-        if (sharedParsed.length >= regularParsed.length) {
-          finalData = sharedData;
-        } else {
-          finalData = regularData;
-        }
-      } else if (sharedData) {
-        finalData = sharedData;
-      } else if (regularData) {
-        finalData = regularData;
-      }
-      
-      // Simpan data yang sudah disync ke kedua key
-      if (finalData) {
-        await this.setItem('feedbacks', finalData);
-        console.log('Data synced successfully');
-        return JSON.parse(finalData);
-      }
-      
-      return [];
-    } catch (error) {
-      console.log('Error syncing data:', error);
-      return [];
     }
   },
 };
@@ -114,7 +62,6 @@ export const FeedbackProvider = ({ children }) => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [isConnected, setIsConnected] = useState(true);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     positive: 0,
@@ -125,100 +72,74 @@ export const FeedbackProvider = ({ children }) => {
     satisfactionRate: 0,
   });
 
-  // Load saved feedbacks on app start with server sync
+  // Load saved feedbacks on app start
   useEffect(() => {
     loadFeedbacks();
-    checkServerConnection();
-    
-    // Auto-sync setiap 30 detik untuk menjaga data tetap sinkron
-    const syncInterval = setInterval(async () => {
-      await syncDataFromServer();
-    }, 30000);
 
-    return () => clearInterval(syncInterval);
+    // Add some test data if no data exists (for development)
+    setTimeout(() => {
+      if (feedbacks.length === 0) {
+        console.log('Adding test data...');
+        const testData = [
+          {
+            id: 'test-1',
+            rating: 5,
+            text: 'Layanan sangat memuaskan dan cepat',
+            message: 'Layanan sangat memuaskan dan cepat',
+            name: 'User Test 1',
+            category: 'service',
+            isAnonymous: false,
+            sentiment: 'positive',
+            timestamp: new Date().toISOString(),
+          },
+          {
+            id: 'test-2',
+            rating: 4,
+            text: 'Produk bagus tapi harga agak mahal',
+            message: 'Produk bagus tapi harga agak mahal',
+            name: 'User Test 2',
+            category: 'product',
+            isAnonymous: false,
+            sentiment: 'neutral',
+            timestamp: new Date().toISOString(),
+          },
+          {
+            id: 'test-3',
+            rating: 3,
+            text: 'Biasa saja, tidak ada yang istimewa',
+            message: 'Biasa saja, tidak ada yang istimewa',
+            name: '',
+            category: 'general',
+            isAnonymous: true,
+            sentiment: 'neutral',
+            timestamp: new Date().toISOString(),
+          },
+        ];
+
+        console.log('Setting test data:', testData);
+        setFeedbacks(testData);
+      }
+    }, 1000);
   }, []);
 
   // Update stats when feedbacks change
   useEffect(() => {
     updateStats();
-    if (!isOnline) {
-      saveFeedbacks(); // Save to local storage only if offline
-    }
+    saveFeedbacks();
   }, [feedbacks]);
-
-  const checkServerConnection = async () => {
-    try {
-      const available = await apiService.isServerAvailable();
-      setIsOnline(available);
-      console.log(`🌐 Server ${available ? 'ONLINE' : 'OFFLINE'} - Platform: ${Platform.OS}`);
-      
-      if (available) {
-        // Try to sync local data to server
-        await syncLocalDataToServer();
-      }
-    } catch (error) {
-      console.log('Error checking server connection:', error);
-      setIsOnline(false);
-    }
-  };
-
-  const syncLocalDataToServer = async () => {
-    try {
-      const localData = await storage.getItem('feedbacks');
-      if (localData) {
-        const localFeedbacks = JSON.parse(localData);
-        if (localFeedbacks.length > 0) {
-          console.log(`📤 Syncing ${localFeedbacks.length} local feedbacks to server...`);
-          await apiService.syncLocalDataToServer(localFeedbacks);
-          // Clear local storage after successful sync
-          await storage.removeItem('feedbacks');
-        }
-      }
-    } catch (error) {
-      console.log('Error syncing local data to server:', error);
-    }
-  };
 
   const loadFeedbacks = async () => {
     try {
       console.log('Loading feedbacks for platform:', Platform.OS);
-      
-      // Try to get data from server first
-      const serverData = await apiService.getFeedbacks();
-      if (serverData && Array.isArray(serverData)) {
-        console.log('✅ Loaded from server:', serverData.length, 'items');
-        setFeedbacks(serverData);
-        setIsOnline(true);
-        return;
-      }
-
-      // Fallback to local storage
-      console.log('📱 Fallback to local storage');
-      setIsOnline(false);
       const saved = await storage.getItem('feedbacks');
+      console.log('Loaded data:', saved ? 'found' : 'not found');
       if (saved) {
         const parsedFeedbacks = JSON.parse(saved);
-        console.log('Loaded from local storage:', parsedFeedbacks.length, 'items');
+        console.log('Parsed feedbacks count:', parsedFeedbacks.length);
         setFeedbacks(parsedFeedbacks);
       }
     } catch (error) {
       console.log('Error loading feedbacks:', error);
-      setIsOnline(false);
-    }
-  };
-
-  const syncDataFromServer = async () => {
-    try {
-      if (!isOnline) return;
-      
-      const serverData = await apiService.getFeedbacks();
-      if (serverData && serverData.length !== feedbacks.length) {
-        console.log('🔄 Server data changed, updating from', feedbacks.length, 'to', serverData.length);
-        setFeedbacks(serverData);
-      }
-    } catch (error) {
-      console.log('Error syncing from server:', error);
-      setIsOnline(false);
     }
   };
 
@@ -438,39 +359,20 @@ export const FeedbackProvider = ({ children }) => {
     });
   };
 
-  const submitFeedback = async (feedbackData) => {
+  const submitFeedback = (feedbackData) => {
     try {
-      console.log('Submitting feedback...', feedbackData);
-      
       const newFeedback = {
         id: Date.now().toString(),
         ...feedbackData,
         message: feedbackData.text,
-        rating: Number(feedbackData.rating) || 0,
+        rating: Number(feedbackData.rating) || 0, // Ensure rating is a number
         isAnonymous: isAnonymous,
         sentiment: analyzeSentiment(feedbackData.text),
         timestamp: new Date().toISOString(),
       };
 
-      // Try to submit to server first
-      if (isOnline) {
-        try {
-          const serverFeedback = await apiService.addFeedback(newFeedback);
-          console.log('✅ Feedback submitted to server');
-          
-          // Refresh data from server to get all feedbacks
-          await syncDataFromServer();
-          return true;
-        } catch (error) {
-          console.log('Failed to submit to server, saving locally');
-          setIsOnline(false);
-        }
-      }
-
-      // Fallback: save locally
-      console.log('💾 Saving feedback locally');
       setFeedbacks((prev) => [...prev, newFeedback]);
-      return true;
+      return true; // Return success
     } catch (error) {
       console.log('Error submitting feedback:', error);
       return false;
@@ -480,26 +382,20 @@ export const FeedbackProvider = ({ children }) => {
   const clearAllFeedbacks = async () => {
     try {
       console.log('Clearing all feedbacks for platform:', Platform.OS);
-      
-      // Try to clear from server first
-      if (isOnline) {
-        try {
-          const success = await apiService.clearAllFeedbacks();
-          if (success) {
-            console.log('✅ Cleared all feedbacks from server');
-            setFeedbacks([]);
-            return true;
-          }
-        } catch (error) {
-          console.log('Failed to clear from server, clearing locally');
-        }
-      }
-
-      // Fallback: clear locally
       setFeedbacks([]);
-      await storage.removeItem('feedbacks');
-      console.log('💾 Cleared local feedbacks');
-      
+      const success = await storage.removeItem('feedbacks');
+      console.log('Clear storage result:', success ? 'success' : 'failed');
+
+      // Reset stats when clearing
+      setStats({
+        total: 0,
+        positive: 0,
+        negative: 0,
+        neutral: 0,
+        anonymous: 0,
+        averageRating: 0,
+        satisfactionRate: 0,
+      });
       return true;
     } catch (error) {
       console.log('Error clearing feedbacks:', error);
@@ -509,27 +405,47 @@ export const FeedbackProvider = ({ children }) => {
 
   const deleteFeedback = async (feedbackId) => {
     try {
-      console.log('Deleting feedback:', feedbackId);
-      
-      // Try to delete from server first
-      if (isOnline) {
-        try {
-          const success = await apiService.deleteFeedback(feedbackId);
-          if (success) {
-            console.log('✅ Deleted feedback from server');
-            // Refresh data from server
-            await syncDataFromServer();
-            return true;
-          }
-        } catch (error) {
-          console.log('Failed to delete from server, deleting locally');
-        }
-      }
+      console.log('deleteFeedback called with ID:', feedbackId);
+      console.log(
+        'Current feedbacks before delete:',
+        feedbacks.map((f) => ({ id: f.id, text: f.text?.substring(0, 20) }))
+      );
 
-      // Fallback: delete locally
-      setFeedbacks((prev) => prev.filter(f => f.id !== feedbackId));
-      console.log('💾 Deleted feedback locally');
-      
+      const originalLength = feedbacks.length;
+
+      setFeedbacks((prev) => {
+        const filtered = prev.filter((feedback) => {
+          const shouldKeep = feedback.id !== feedbackId;
+          console.log(
+            `Feedback ${feedback.id}: ${shouldKeep ? 'keeping' : 'DELETING'}`
+          );
+          return shouldKeep;
+        });
+        console.log(
+          `Filter result: ${filtered.length} items (was ${originalLength})`
+        );
+
+        // Force a re-render by creating new array
+        return [...filtered];
+      });
+
+      // Also update storage immediately for web compatibility
+      setTimeout(async () => {
+        try {
+          const updatedFeedbacks = feedbacks.filter((f) => f.id !== feedbackId);
+          const success = await storage.setItem(
+            'feedbacks',
+            JSON.stringify(updatedFeedbacks)
+          );
+          console.log(
+            'Storage updated after delete:',
+            success ? 'success' : 'failed'
+          );
+        } catch (error) {
+          console.log('Error updating storage:', error);
+        }
+      }, 100);
+
       return true;
     } catch (error) {
       console.log('Error deleting feedback:', error);
@@ -542,14 +458,11 @@ export const FeedbackProvider = ({ children }) => {
     stats,
     isConnected,
     isAnonymous,
-    isOnline,
     setIsAnonymous,
     submitFeedback,
     clearAllFeedbacks,
     deleteFeedback,
     generateWordCloud,
-    syncDataFromServer,
-    checkServerConnection,
   };
 
   return (

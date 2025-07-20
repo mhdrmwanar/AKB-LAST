@@ -37,15 +37,11 @@ export default function TestAdminDashboard({ navigation }) {
     generateWordCloud,
     clearAllFeedbacks,
     deleteFeedback,
-    syncDataFromServer,
-    checkServerConnection,
-    isOnline,
   } = useFeedback();
   const [refreshing, setRefreshing] = useState(false);
   const [wordCloudData, setWordCloudData] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const data = generateWordCloud();
@@ -176,12 +172,9 @@ export default function TestAdminDashboard({ navigation }) {
             );
           })
         ) : (
-          <View style={styles.emptyWordCloudContainer}>
-            <Ionicons name="cloud-outline" size={48} color="#E0E0E0" />
-            <Text style={styles.emptyComponentTitle}>Word Cloud Kosong</Text>
-            <Text style={styles.emptyComponentText}>
-              Kata-kata dari feedback akan muncul di sini
-            </Text>
+          <View style={styles.emptyWordCloud}>
+            <Ionicons name="chatbubble-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>Belum ada data feedback</Text>
           </View>
         )}
       </View>
@@ -259,13 +252,7 @@ export default function TestAdminDashboard({ navigation }) {
             </View>
           ))
         ) : (
-          <View style={styles.emptyCategoryContainer}>
-            <Ionicons name="pie-chart-outline" size={48} color="#E0E0E0" />
-            <Text style={styles.emptyComponentTitle}>Belum Ada Kategori</Text>
-            <Text style={styles.emptyComponentText}>
-              Analisis kategori akan muncul setelah ada feedback
-            </Text>
-          </View>
+          <Text style={styles.emptyText}>Data kategori tidak tersedia</Text>
         )}
       </View>
     );
@@ -284,41 +271,31 @@ export default function TestAdminDashboard({ navigation }) {
           </Text>
         </View>
         <View style={styles.ratingChart}>
-          {feedbacks.length > 0 ? (
-            [5, 4, 3, 2, 1].map((rating) => (
-              <View key={rating} style={styles.ratingRow}>
-                <Text style={styles.ratingLabel}>{rating} ⭐</Text>
-                <View style={styles.ratingBarContainer}>
-                  <View
-                    style={[
-                      styles.ratingBar,
-                      {
-                        width:
-                          maxCount > 0
-                            ? `${(distribution[rating] / maxCount) * 100}%`
-                            : '0%',
-                        backgroundColor:
-                          rating >= 4
-                            ? '#4CAF50'
-                            : rating >= 3
-                            ? '#FF9800'
-                            : '#F44336',
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.ratingCount}>{distribution[rating]}</Text>
+          {[5, 4, 3, 2, 1].map((rating) => (
+            <View key={rating} style={styles.ratingRow}>
+              <Text style={styles.ratingLabel}>{rating} ⭐</Text>
+              <View style={styles.ratingBarContainer}>
+                <View
+                  style={[
+                    styles.ratingBar,
+                    {
+                      width:
+                        maxCount > 0
+                          ? `${(distribution[rating] / maxCount) * 100}%`
+                          : '0%',
+                      backgroundColor:
+                        rating >= 4
+                          ? '#4CAF50'
+                          : rating >= 3
+                          ? '#FF9800'
+                          : '#F44336',
+                    },
+                  ]}
+                />
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyRatingContainer}>
-              <Ionicons name="star-outline" size={48} color="#E0E0E0" />
-              <Text style={styles.emptyComponentTitle}>Belum Ada Rating</Text>
-              <Text style={styles.emptyComponentText}>
-                Distribusi rating akan muncul setelah ada feedback
-              </Text>
+              <Text style={styles.ratingCount}>{distribution[rating]}</Text>
             </View>
-          )}
+          ))}
         </View>
       </View>
     );
@@ -421,35 +398,9 @@ export default function TestAdminDashboard({ navigation }) {
             );
           })
         ) : (
-          <View style={styles.emptyStateContainer}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="chatbubbles-outline" size={64} color="#E0E0E0" />
-            </View>
-            <Text style={styles.emptyTitle}>Belum Ada Feedback</Text>
-            <Text style={styles.emptyDescription}>
-              Feedback dari pengguna akan muncul di sini setelah mereka mengirim tanggapan
-            </Text>
-            <View style={styles.emptyFeatures}>
-              <View style={styles.emptyFeatureItem}>
-                <Ionicons name="star-outline" size={20} color="#9E9E9E" />
-                <Text style={styles.emptyFeatureText}>Rating & Penilaian</Text>
-              </View>
-              <View style={styles.emptyFeatureItem}>
-                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#9E9E9E" />
-                <Text style={styles.emptyFeatureText}>Komentar Detail</Text>
-              </View>
-              <View style={styles.emptyFeatureItem}>
-                <Ionicons name="analytics-outline" size={20} color="#9E9E9E" />
-                <Text style={styles.emptyFeatureText}>Analisis Otomatis</Text>
-              </View>
-            </View>
-            <TouchableOpacity 
-              style={styles.startButton}
-              onPress={() => navigation.navigate('UserDashboard')}
-            >
-              <Ionicons name="add-circle-outline" size={20} color="#2196F3" />
-              <Text style={styles.startButtonText}>Kirim Feedback Pertama</Text>
-            </TouchableOpacity>
+          <View style={styles.emptyFeedback}>
+            <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>Belum ada feedback</Text>
           </View>
         )}
       </View>
@@ -468,9 +419,7 @@ export default function TestAdminDashboard({ navigation }) {
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Dashboard Analitik</Text>
-          <Text style={styles.headerSubtitle}>
-            Wawasan feedback real-time • {Platform.OS === 'web' ? 'Web' : 'Android'} • {isOnline ? '🟢 Online' : '🔴 Offline'}
-          </Text>
+          <Text style={styles.headerSubtitle}>Wawasan feedback real-time</Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate('UserDashboard')}
@@ -493,29 +442,29 @@ export default function TestAdminDashboard({ navigation }) {
         <View style={styles.statsGrid}>
           {renderStatCard(
             'Total Tanggapan',
-            feedbacks.length > 0 ? stats.total.toString() : '0',
-            feedbacks.length > 0 ? 'Semua feedback' : 'Belum ada feedback',
+            stats.total.toString(),
+            'Semua feedback',
             'people',
             '#2196F3'
           )}
           {renderStatCard(
             'Rating Rata-rata',
-            feedbacks.length > 0 && stats.averageRating ? stats.averageRating.toFixed(1) : '0.0',
+            stats.averageRating ? stats.averageRating.toFixed(1) : '0.0',
             'Dari 5 bintang',
             'star',
             '#FFD700'
           )}
           {renderStatCard(
             'Kepuasan',
-            feedbacks.length > 0 ? `${stats.satisfactionRate || 0}%` : '0%',
+            `${stats.satisfactionRate || 0}%`,
             'Rating 4+ bintang',
             'happy',
             '#4CAF50'
           )}
           {renderStatCard(
             'Anonim',
-            feedbacks.length > 0 ? stats.anonymous.toString() : '0',
-            feedbacks.length > 0 ? 'Feedback pribadi' : 'Belum ada data',
+            stats.anonymous.toString(),
+            'Feedback pribadi',
             'shield',
             '#9C27B0'
           )}
@@ -567,41 +516,6 @@ export default function TestAdminDashboard({ navigation }) {
             <Text style={styles.clearButtonText}>Hapus Semua Data</Text>
           </TouchableOpacity>
         )}
-
-        {/* Sync Button */}
-        <TouchableOpacity
-          style={[styles.clearButton, { 
-            backgroundColor: isSyncing ? '#ccc' : (isOnline ? '#4CAF50' : '#FF9800'), 
-            marginTop: 10 
-          }]}
-          onPress={async () => {
-            if (isSyncing) return;
-            
-            setIsSyncing(true);
-            try {
-              if (isOnline) {
-                await syncDataFromServer();
-                showAlert('Berhasil', 'Data berhasil disinkronkan dari server');
-              } else {
-                await checkServerConnection();
-                showAlert('Mencoba Koneksi', 'Sedang mencoba menghubungkan ke server...');
-              }
-            } catch (error) {
-              showAlert('Error', 'Gagal sinkronisasi data');
-            }
-            setIsSyncing(false);
-          }}
-          disabled={isSyncing}
-        >
-          <Ionicons 
-            name={isSyncing ? "sync" : (isOnline ? "cloud-done" : "cloud-offline")} 
-            size={16} 
-            color="#fff" 
-          />
-          <Text style={[styles.clearButtonText, { color: '#fff' }]}>
-            {isSyncing ? 'Menyinkronkan...' : (isOnline ? 'Sinkronkan Data' : 'Coba Koneksi')}
-          </Text>
-        </TouchableOpacity>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -915,98 +829,5 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
-  },
-  
-  // Empty State Styles
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 20,
-  },
-  emptyIconContainer: {
-    marginBottom: 24,
-    opacity: 0.6,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#424242',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  emptyDescription: {
-    fontSize: 16,
-    color: '#757575',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 32,
-    maxWidth: 300,
-  },
-  emptyFeatures: {
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  emptyFeatureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  emptyFeatureText: {
-    fontSize: 14,
-    color: '#9E9E9E',
-    marginLeft: 12,
-  },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E3F2FD',
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: '#2196F3',
-    elevation: 2,
-    shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-  startButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2196F3',
-    marginLeft: 8,
-  },
-  
-  // Component Empty States
-  emptyWordCloudContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  emptyCategoryContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  emptyRatingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  emptyComponentTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#757575',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyComponentText: {
-    fontSize: 14,
-    color: '#9E9E9E',
-    textAlign: 'center',
-    maxWidth: 250,
   },
 });

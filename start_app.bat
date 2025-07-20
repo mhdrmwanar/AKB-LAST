@@ -1,9 +1,0 @@
-@echo off
-echo Starting Live Feedback Survey App...
-echo.
-echo Installing dependencies...
-call npm install
-echo.
-echo Starting Expo development server...
-call npx expo start
-pause
