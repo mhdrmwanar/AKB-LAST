@@ -81,7 +81,7 @@ export default function TestAdminDashboard({ navigation }) {
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>Word Cloud</Text>
         <Text style={styles.cardSubtitle}>
-          Most mentioned words in feedback
+          Kata-kata yang paling sering disebutkan
         </Text>
       </View>
       <View style={styles.wordCloudContainer}>
@@ -100,7 +100,7 @@ export default function TestAdminDashboard({ navigation }) {
         ) : (
           <View style={styles.emptyWordCloud}>
             <Ionicons name="chatbubble-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No feedback data yet</Text>
+            <Text style={styles.emptyText}>Belum ada data feedback</Text>
           </View>
         )}
       </View>
@@ -120,9 +120,9 @@ export default function TestAdminDashboard({ navigation }) {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Category Analysis</Text>
+          <Text style={styles.cardTitle}>Analisis Kategori</Text>
           <Text style={styles.cardSubtitle}>
-            Feedback distribution by category
+            Distribusi feedback berdasarkan kategori
           </Text>
         </View>
         {categoryStats.length > 0 ? (
@@ -140,12 +140,20 @@ export default function TestAdminDashboard({ navigation }) {
                     ]}
                   />
                   <Text style={styles.categoryName}>
-                    {category.name.charAt(0).toUpperCase() +
-                      category.name.slice(1)}
+                    {category.name === 'general'
+                      ? 'Umum'
+                      : category.name === 'service'
+                      ? 'Layanan'
+                      : category.name === 'product'
+                      ? 'Produk'
+                      : category.name === 'suggestion'
+                      ? 'Saran'
+                      : category.name.charAt(0).toUpperCase() +
+                        category.name.slice(1)}
                   </Text>
                 </View>
                 <Text style={styles.categoryCount}>
-                  {category.count} responses
+                  {category.count} tanggapan
                 </Text>
               </View>
               <View style={styles.categoryBar}>
@@ -170,7 +178,7 @@ export default function TestAdminDashboard({ navigation }) {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>No category data available</Text>
+          <Text style={styles.emptyText}>Data kategori tidak tersedia</Text>
         )}
       </View>
     );
@@ -183,9 +191,9 @@ export default function TestAdminDashboard({ navigation }) {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Rating Distribution</Text>
+          <Text style={styles.cardTitle}>Distribusi Rating</Text>
           <Text style={styles.cardSubtitle}>
-            How users rated their experience
+            Bagaimana pengguna menilai pengalaman mereka
           </Text>
         </View>
         <View style={styles.ratingChart}>
@@ -225,8 +233,8 @@ export default function TestAdminDashboard({ navigation }) {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Recent Feedback</Text>
-          <Text style={styles.cardSubtitle}>Latest submissions</Text>
+          <Text style={styles.cardTitle}>Feedback Terbaru</Text>
+          <Text style={styles.cardSubtitle}>Feedback terkini yang masuk</Text>
         </View>
         {recentFeedback.length > 0 ? (
           recentFeedback.map((item, index) => (
@@ -261,7 +269,7 @@ export default function TestAdminDashboard({ navigation }) {
         ) : (
           <View style={styles.emptyFeedback}>
             <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No recent feedback</Text>
+            <Text style={styles.emptyText}>Belum ada feedback terbaru</Text>
           </View>
         )}
       </View>
@@ -279,8 +287,8 @@ export default function TestAdminDashboard({ navigation }) {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Analytics Dashboard</Text>
-          <Text style={styles.headerSubtitle}>Real-time feedback insights</Text>
+          <Text style={styles.headerTitle}>Dashboard Analitik</Text>
+          <Text style={styles.headerSubtitle}>Wawasan feedback real-time</Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate('UserDashboard')}
@@ -302,30 +310,30 @@ export default function TestAdminDashboard({ navigation }) {
         {/* Stats Cards */}
         <View style={styles.statsGrid}>
           {renderStatCard(
-            'Total Responses',
+            'Total Tanggapan',
             stats.total.toString(),
-            'All time feedback',
+            'Semua feedback',
             'people',
             '#2196F3'
           )}
           {renderStatCard(
-            'Average Rating',
+            'Rating Rata-rata',
             stats.averageRating || '0',
-            'Out of 5 stars',
+            'Dari 5 bintang',
             'star',
             '#FFD700'
           )}
           {renderStatCard(
-            'Satisfaction',
+            'Kepuasan',
             stats.satisfactionRate || '0%',
-            'Rating 4+ stars',
+            'Rating 4+ bintang',
             'happy',
             '#4CAF50'
           )}
           {renderStatCard(
-            'Anonymous',
+            'Anonim',
             stats.anonymous.toString(),
-            'Private submissions',
+            'Feedback pribadi',
             'shield',
             '#9C27B0'
           )}

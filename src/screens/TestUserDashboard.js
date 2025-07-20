@@ -24,27 +24,27 @@ export default function TestUserDashboard({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState('general');
 
   const categories = [
-    { id: 'general', label: 'General', icon: 'chatbox', color: '#2196F3' },
-    { id: 'service', label: 'Service', icon: 'people', color: '#4CAF50' },
-    { id: 'product', label: 'Product', icon: 'cube', color: '#FF9800' },
-    { id: 'suggestion', label: 'Suggestion', icon: 'bulb', color: '#9C27B0' },
+    { id: 'general', label: 'Umum', icon: 'chatbox', color: '#2196F3' },
+    { id: 'service', label: 'Layanan', icon: 'people', color: '#4CAF50' },
+    { id: 'product', label: 'Produk', icon: 'cube', color: '#FF9800' },
+    { id: 'suggestion', label: 'Saran', icon: 'bulb', color: '#9C27B0' },
   ];
 
   const handleSubmit = async () => {
     if (!feedbackText.trim()) {
-      Alert.alert('Missing Information', 'Please enter your feedback');
+      Alert.alert('Informasi Kurang', 'Silakan masukkan feedback Anda');
       return;
     }
 
     if (rating === 0) {
-      Alert.alert('Missing Information', 'Please select a rating');
+      Alert.alert('Informasi Kurang', 'Silakan pilih rating');
       return;
     }
 
     if (!isAnonymous && !name.trim()) {
       Alert.alert(
-        'Missing Information',
-        'Please enter your name or enable anonymous mode'
+        'Informasi Kurang',
+        'Silakan masukkan nama Anda atau aktifkan mode anonim'
       );
       return;
     }
@@ -60,26 +60,22 @@ export default function TestUserDashboard({ navigation }) {
       });
 
       if (success) {
-        Alert.alert(
-          'Thank You!',
-          'Your feedback has been submitted successfully!',
-          [
-            {
-              text: 'View Analytics',
-              onPress: () => {
-                resetForm();
-                navigation.navigate('AdminDashboard');
-              },
+        Alert.alert('Terima Kasih!', 'Feedback Anda berhasil dikirim!', [
+          {
+            text: 'Lihat Analitik',
+            onPress: () => {
+              resetForm();
+              navigation.navigate('AdminDashboard');
             },
-            {
-              text: 'Submit Another',
-              onPress: () => resetForm(),
-            },
-          ]
-        );
+          },
+          {
+            text: 'Kirim Lagi',
+            onPress: () => resetForm(),
+          },
+        ]);
       }
     } catch (error) {
-      Alert.alert('Submission Failed', 'Please try again later.');
+      Alert.alert('Gagal Mengirim', 'Silakan coba lagi nanti.');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,7 +91,7 @@ export default function TestUserDashboard({ navigation }) {
   const renderStars = () => {
     return (
       <View style={styles.starsContainer}>
-        <Text style={styles.ratingLabel}>Rate your experience</Text>
+        <Text style={styles.ratingLabel}>Beri nilai pengalaman Anda</Text>
         <View style={styles.stars}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity
@@ -113,7 +109,11 @@ export default function TestUserDashboard({ navigation }) {
         </View>
         {rating > 0 && (
           <Text style={styles.ratingText}>
-            {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][rating]}
+            {
+              ['', 'Buruk', 'Kurang', 'Baik', 'Sangat Baik', 'Luar Biasa'][
+                rating
+              ]
+            }
           </Text>
         )}
       </View>
@@ -134,8 +134,10 @@ export default function TestUserDashboard({ navigation }) {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Submit Feedback</Text>
-          <Text style={styles.headerSubtitle}>Help us improve our service</Text>
+          <Text style={styles.headerTitle}>Kirim Feedback</Text>
+          <Text style={styles.headerSubtitle}>
+            Bantu kami meningkatkan layanan
+          </Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate('AdminDashboard')}
@@ -149,13 +151,13 @@ export default function TestUserDashboard({ navigation }) {
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
           <Ionicons name="people" size={16} color="#4CAF50" />
-          <Text style={styles.statText}>{stats.total} responses</Text>
+          <Text style={styles.statText}>{stats.total} tanggapan</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Ionicons name="star" size={16} color="#FFD700" />
           <Text style={styles.statText}>
-            {stats.averageRating || '0'} avg rating
+            {stats.averageRating || '0'} rata-rata
           </Text>
         </View>
       </View>
@@ -172,9 +174,9 @@ export default function TestUserDashboard({ navigation }) {
             <View style={styles.toggleInfo}>
               <Ionicons name="shield-checkmark" size={24} color="#4CAF50" />
               <View style={styles.toggleTextContainer}>
-                <Text style={styles.toggleLabel}>Anonymous Feedback</Text>
+                <Text style={styles.toggleLabel}>Feedback Anonim</Text>
                 <Text style={styles.toggleSubtext}>
-                  Your identity will remain private
+                  Identitas Anda akan tetap rahasia
                 </Text>
               </View>
             </View>
@@ -190,10 +192,10 @@ export default function TestUserDashboard({ navigation }) {
         {/* Name Input */}
         {!isAnonymous && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Your Name</Text>
+            <Text style={styles.sectionTitle}>Nama Anda</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Enter your full name"
+              placeholder="Masukkan nama lengkap Anda"
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -203,7 +205,7 @@ export default function TestUserDashboard({ navigation }) {
 
         {/* Category Selection */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Feedback Category</Text>
+          <Text style={styles.sectionTitle}>Kategori Feedback</Text>
           <View style={styles.categoryGrid}>
             {categories.map((category) => (
               <TouchableOpacity
@@ -246,10 +248,10 @@ export default function TestUserDashboard({ navigation }) {
 
         {/* Feedback Text */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Your Feedback</Text>
+          <Text style={styles.sectionTitle}>Feedback Anda</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
-            placeholder="Please share your detailed feedback, suggestions, or concerns..."
+            placeholder="Silakan bagikan feedback, saran, atau keluhan Anda secara detail..."
             value={feedbackText}
             onChangeText={setFeedbackText}
             multiline
@@ -257,7 +259,7 @@ export default function TestUserDashboard({ navigation }) {
             textAlignVertical="top"
           />
           <Text style={styles.charCounter}>
-            {feedbackText.length}/500 characters
+            {feedbackText.length}/500 karakter
           </Text>
         </View>
 
@@ -273,12 +275,12 @@ export default function TestUserDashboard({ navigation }) {
           {isSubmitting ? (
             <>
               <Ionicons name="hourglass" size={20} color="#fff" />
-              <Text style={styles.submitButtonText}>Submitting...</Text>
+              <Text style={styles.submitButtonText}>Mengirim...</Text>
             </>
           ) : (
             <>
               <Ionicons name="send" size={20} color="#fff" />
-              <Text style={styles.submitButtonText}>Submit Feedback</Text>
+              <Text style={styles.submitButtonText}>Kirim Feedback</Text>
             </>
           )}
         </TouchableOpacity>
