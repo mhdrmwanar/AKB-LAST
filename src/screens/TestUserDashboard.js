@@ -65,7 +65,7 @@ export default function TestUserDashboard({ navigation }) {
             text: 'Lihat Analitik',
             onPress: () => {
               resetForm();
-              navigation.navigate('AdminDashboard');
+              navigation.navigate('TestAdminDashboard');
             },
           },
           {

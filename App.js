@@ -52,6 +52,11 @@ export default function App() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="TestAdminDashboard"
+              component={TestAdminDashboard}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="Results"
               component={ResultsScreen}
               options={{ title: 'Live Results' }}

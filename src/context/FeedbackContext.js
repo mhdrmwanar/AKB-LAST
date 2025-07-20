@@ -14,6 +14,7 @@ export const useFeedback = () => {
 export const FeedbackProvider = ({ children }) => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [isConnected, setIsConnected] = useState(true);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     positive: 0,
@@ -211,21 +212,37 @@ export const FeedbackProvider = ({ children }) => {
   };
 
   const submitFeedback = (feedbackData) => {
-    const newFeedback = {
-      id: Date.now().toString(),
-      ...feedbackData,
-      sentiment: analyzeSentiment(feedbackData.message),
-      timestamp: new Date().toISOString(),
-    };
+    try {
+      const newFeedback = {
+        id: Date.now().toString(),
+        ...feedbackData,
+        message: feedbackData.text,
+        isAnonymous: isAnonymous,
+        sentiment: analyzeSentiment(feedbackData.text),
+        timestamp: new Date().toISOString(),
+      };
 
-    setFeedbacks((prev) => [...prev, newFeedback]);
-    return newFeedback;
+      setFeedbacks((prev) => [...prev, newFeedback]);
+      return true; // Return success
+    } catch (error) {
+      console.log('Error submitting feedback:', error);
+      return false;
+    }
   };
 
   const clearAllFeedbacks = async () => {
     setFeedbacks([]);
     try {
       await AsyncStorage.removeItem('feedbacks');
+      // Reset stats when clearing
+      setStats({
+        total: 0,
+        positive: 0,
+        negative: 0,
+        neutral: 0,
+        anonymous: 0,
+        averageRating: 0,
+      });
     } catch (error) {
       console.log('Error clearing feedbacks:', error);
     }
@@ -235,6 +252,8 @@ export const FeedbackProvider = ({ children }) => {
     feedbacks,
     stats,
     isConnected,
+    isAnonymous,
+    setIsAnonymous,
     submitFeedback,
     clearAllFeedbacks,
     generateWordCloud,

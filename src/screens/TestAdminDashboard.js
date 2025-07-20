@@ -6,12 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
 
 export default function TestAdminDashboard({ navigation }) {
-  const { feedbacks, stats, generateWordCloud } = useFeedback();
+  const { feedbacks, stats, generateWordCloud, clearAllFeedbacks } =
+    useFeedback();
   const [refreshing, setRefreshing] = useState(false);
   const [wordCloudData, setWordCloudData] = useState([]);
 
@@ -345,6 +347,33 @@ export default function TestAdminDashboard({ navigation }) {
         {renderRatingDistribution()}
         {renderRecentFeedback()}
 
+        {/* Clear Data Button */}
+        {stats.total > 0 && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => {
+              Alert.alert(
+                'Hapus Semua Data',
+                'Apakah Anda yakin ingin menghapus semua data feedback? Tindakan ini tidak dapat dibatalkan.',
+                [
+                  {
+                    text: 'Batal',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Hapus',
+                    style: 'destructive',
+                    onPress: () => clearAllFeedbacks(),
+                  },
+                ]
+              );
+            }}
+          >
+            <Ionicons name="trash" size={16} color="#F44336" />
+            <Text style={styles.clearButtonText}>Hapus Semua Data</Text>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.bottomPadding} />
       </ScrollView>
     </View>
@@ -615,6 +644,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
+  },
+  clearButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#F44336',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginVertical: 20,
+    marginHorizontal: 20,
+  },
+  clearButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#F44336',
+    marginLeft: 8,
   },
   bottomPadding: {
     height: 40,

@@ -92,7 +92,7 @@ export default function HomeScreen({ navigation }) {
         {/* Admin Dashboard Card */}
         <TouchableOpacity
           style={[styles.dashboardCard, styles.adminCard]}
-          onPress={() => navigation.navigate('AdminDashboard')}
+          onPress={() => navigation.navigate('TestAdminDashboard')}
           activeOpacity={0.9}
         >
           <View style={styles.cardGradient}>
