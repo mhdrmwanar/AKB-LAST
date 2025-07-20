@@ -8,7 +8,6 @@ import {
   RefreshControl,
   Alert,
   Platform,
-  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
@@ -31,38 +30,6 @@ const showAlert = (title, message, buttons) => {
   }
 };
 
-// Cross-platform TouchableButton wrapper
-const TouchableButton = ({ children, onPress, style, disabled, ...props }) => {
-  if (Platform.OS === 'web') {
-    return (
-      <Pressable
-        onPress={onPress}
-        disabled={disabled}
-        style={({ pressed }) => [
-          style,
-          pressed && { opacity: 0.7 },
-          disabled && { opacity: 0.5 },
-        ]}
-        {...props}
-      >
-        {children}
-      </Pressable>
-    );
-  } else {
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={disabled}
-        style={style}
-        activeOpacity={0.7}
-        {...props}
-      >
-        {children}
-      </TouchableOpacity>
-    );
-  }
-};
-
 export default function TestAdminDashboard({ navigation }) {
   const {
     feedbacks,
@@ -70,11 +37,15 @@ export default function TestAdminDashboard({ navigation }) {
     generateWordCloud,
     clearAllFeedbacks,
     deleteFeedback,
+    syncDataFromServer,
+    checkServerConnection,
+    isOnline,
   } = useFeedback();
   const [refreshing, setRefreshing] = useState(false);
   const [wordCloudData, setWordCloudData] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const data = generateWordCloud();
@@ -205,9 +176,12 @@ export default function TestAdminDashboard({ navigation }) {
             );
           })
         ) : (
-          <View style={styles.emptyWordCloud}>
-            <Ionicons name="chatbubble-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>Belum ada data feedback</Text>
+          <View style={styles.emptyWordCloudContainer}>
+            <Ionicons name="cloud-outline" size={48} color="#E0E0E0" />
+            <Text style={styles.emptyComponentTitle}>Word Cloud Kosong</Text>
+            <Text style={styles.emptyComponentText}>
+              Kata-kata dari feedback akan muncul di sini
+            </Text>
           </View>
         )}
       </View>
@@ -285,7 +259,13 @@ export default function TestAdminDashboard({ navigation }) {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>Data kategori tidak tersedia</Text>
+          <View style={styles.emptyCategoryContainer}>
+            <Ionicons name="pie-chart-outline" size={48} color="#E0E0E0" />
+            <Text style={styles.emptyComponentTitle}>Belum Ada Kategori</Text>
+            <Text style={styles.emptyComponentText}>
+              Analisis kategori akan muncul setelah ada feedback
+            </Text>
+          </View>
         )}
       </View>
     );
@@ -304,31 +284,41 @@ export default function TestAdminDashboard({ navigation }) {
           </Text>
         </View>
         <View style={styles.ratingChart}>
-          {[5, 4, 3, 2, 1].map((rating) => (
-            <View key={rating} style={styles.ratingRow}>
-              <Text style={styles.ratingLabel}>{rating} ⭐</Text>
-              <View style={styles.ratingBarContainer}>
-                <View
-                  style={[
-                    styles.ratingBar,
-                    {
-                      width:
-                        maxCount > 0
-                          ? `${(distribution[rating] / maxCount) * 100}%`
-                          : '0%',
-                      backgroundColor:
-                        rating >= 4
-                          ? '#4CAF50'
-                          : rating >= 3
-                          ? '#FF9800'
-                          : '#F44336',
-                    },
-                  ]}
-                />
+          {feedbacks.length > 0 ? (
+            [5, 4, 3, 2, 1].map((rating) => (
+              <View key={rating} style={styles.ratingRow}>
+                <Text style={styles.ratingLabel}>{rating} ⭐</Text>
+                <View style={styles.ratingBarContainer}>
+                  <View
+                    style={[
+                      styles.ratingBar,
+                      {
+                        width:
+                          maxCount > 0
+                            ? `${(distribution[rating] / maxCount) * 100}%`
+                            : '0%',
+                        backgroundColor:
+                          rating >= 4
+                            ? '#4CAF50'
+                            : rating >= 3
+                            ? '#FF9800'
+                            : '#F44336',
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.ratingCount}>{distribution[rating]}</Text>
               </View>
-              <Text style={styles.ratingCount}>{distribution[rating]}</Text>
+            ))
+          ) : (
+            <View style={styles.emptyRatingContainer}>
+              <Ionicons name="star-outline" size={48} color="#E0E0E0" />
+              <Text style={styles.emptyComponentTitle}>Belum Ada Rating</Text>
+              <Text style={styles.emptyComponentText}>
+                Distribusi rating akan muncul setelah ada feedback
+              </Text>
             </View>
-          ))}
+          )}
         </View>
       </View>
     );
@@ -383,11 +373,10 @@ export default function TestAdminDashboard({ navigation }) {
                       ))}
                     </View>
                   </View>
-                  <TouchableButton
+                  <TouchableOpacity
                     style={[
                       styles.deleteButton,
                       isDeleting && styles.deleteButtonDisabled,
-                      Platform.OS === 'web' && { cursor: isDeleting ? 'not-allowed' : 'pointer' },
                     ]}
                     onPress={() =>
                       handleDeleteFeedback(
@@ -402,7 +391,7 @@ export default function TestAdminDashboard({ navigation }) {
                       size={16}
                       color={isDeleting ? '#ccc' : '#F44336'}
                     />
-                  </TouchableButton>
+                  </TouchableOpacity>
                 </View>
                 <Text style={styles.feedbackText} numberOfLines={3}>
                   {item.message || item.text}
@@ -432,9 +421,35 @@ export default function TestAdminDashboard({ navigation }) {
             );
           })
         ) : (
-          <View style={styles.emptyFeedback}>
-            <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>Belum ada feedback</Text>
+          <View style={styles.emptyStateContainer}>
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="chatbubbles-outline" size={64} color="#E0E0E0" />
+            </View>
+            <Text style={styles.emptyTitle}>Belum Ada Feedback</Text>
+            <Text style={styles.emptyDescription}>
+              Feedback dari pengguna akan muncul di sini setelah mereka mengirim tanggapan
+            </Text>
+            <View style={styles.emptyFeatures}>
+              <View style={styles.emptyFeatureItem}>
+                <Ionicons name="star-outline" size={20} color="#9E9E9E" />
+                <Text style={styles.emptyFeatureText}>Rating & Penilaian</Text>
+              </View>
+              <View style={styles.emptyFeatureItem}>
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color="#9E9E9E" />
+                <Text style={styles.emptyFeatureText}>Komentar Detail</Text>
+              </View>
+              <View style={styles.emptyFeatureItem}>
+                <Ionicons name="analytics-outline" size={20} color="#9E9E9E" />
+                <Text style={styles.emptyFeatureText}>Analisis Otomatis</Text>
+              </View>
+            </View>
+            <TouchableOpacity 
+              style={styles.startButton}
+              onPress={() => navigation.navigate('UserDashboard')}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#2196F3" />
+              <Text style={styles.startButtonText}>Kirim Feedback Pertama</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -445,22 +460,24 @@ export default function TestAdminDashboard({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableButton
+        <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={[styles.backButton, Platform.OS === 'web' && { cursor: 'pointer' }]}
+          style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableButton>
+        </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Dashboard Analitik</Text>
-          <Text style={styles.headerSubtitle}>Wawasan feedback real-time</Text>
+          <Text style={styles.headerSubtitle}>
+            Wawasan feedback real-time • {Platform.OS === 'web' ? 'Web' : 'Android'} • {isOnline ? '🟢 Online' : '🔴 Offline'}
+          </Text>
         </View>
-        <TouchableButton
+        <TouchableOpacity
           onPress={() => navigation.navigate('UserDashboard')}
-          style={[styles.addButton, Platform.OS === 'web' && { cursor: 'pointer' }]}
+          style={styles.addButton}
         >
           <Ionicons name="add" size={20} color="#fff" />
-        </TouchableButton>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -476,29 +493,29 @@ export default function TestAdminDashboard({ navigation }) {
         <View style={styles.statsGrid}>
           {renderStatCard(
             'Total Tanggapan',
-            stats.total.toString(),
-            'Semua feedback',
+            feedbacks.length > 0 ? stats.total.toString() : '0',
+            feedbacks.length > 0 ? 'Semua feedback' : 'Belum ada feedback',
             'people',
             '#2196F3'
           )}
           {renderStatCard(
             'Rating Rata-rata',
-            stats.averageRating ? stats.averageRating.toFixed(1) : '0.0',
+            feedbacks.length > 0 && stats.averageRating ? stats.averageRating.toFixed(1) : '0.0',
             'Dari 5 bintang',
             'star',
             '#FFD700'
           )}
           {renderStatCard(
             'Kepuasan',
-            `${stats.satisfactionRate || 0}%`,
+            feedbacks.length > 0 ? `${stats.satisfactionRate || 0}%` : '0%',
             'Rating 4+ bintang',
             'happy',
             '#4CAF50'
           )}
           {renderStatCard(
             'Anonim',
-            stats.anonymous.toString(),
-            'Feedback pribadi',
+            feedbacks.length > 0 ? stats.anonymous.toString() : '0',
+            feedbacks.length > 0 ? 'Feedback pribadi' : 'Belum ada data',
             'shield',
             '#9C27B0'
           )}
@@ -512,11 +529,8 @@ export default function TestAdminDashboard({ navigation }) {
 
         {/* Clear Data Button */}
         {stats.total > 0 && (
-          <TouchableButton
-            style={[
-              styles.clearButton, 
-              Platform.OS === 'web' && { cursor: 'pointer' }
-            ]}
+          <TouchableOpacity
+            style={styles.clearButton}
             onPress={() => {
               showAlert(
                 'Hapus Semua Data',
@@ -551,8 +565,43 @@ export default function TestAdminDashboard({ navigation }) {
           >
             <Ionicons name="trash" size={16} color="#F44336" />
             <Text style={styles.clearButtonText}>Hapus Semua Data</Text>
-          </TouchableButton>
+          </TouchableOpacity>
         )}
+
+        {/* Sync Button */}
+        <TouchableOpacity
+          style={[styles.clearButton, { 
+            backgroundColor: isSyncing ? '#ccc' : (isOnline ? '#4CAF50' : '#FF9800'), 
+            marginTop: 10 
+          }]}
+          onPress={async () => {
+            if (isSyncing) return;
+            
+            setIsSyncing(true);
+            try {
+              if (isOnline) {
+                await syncDataFromServer();
+                showAlert('Berhasil', 'Data berhasil disinkronkan dari server');
+              } else {
+                await checkServerConnection();
+                showAlert('Mencoba Koneksi', 'Sedang mencoba menghubungkan ke server...');
+              }
+            } catch (error) {
+              showAlert('Error', 'Gagal sinkronisasi data');
+            }
+            setIsSyncing(false);
+          }}
+          disabled={isSyncing}
+        >
+          <Ionicons 
+            name={isSyncing ? "sync" : (isOnline ? "cloud-done" : "cloud-offline")} 
+            size={16} 
+            color="#fff" 
+          />
+          <Text style={[styles.clearButtonText, { color: '#fff' }]}>
+            {isSyncing ? 'Menyinkronkan...' : (isOnline ? 'Sinkronkan Data' : 'Coba Koneksi')}
+          </Text>
+        </TouchableOpacity>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -564,21 +613,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    ...(Platform.OS === 'web' && {
-      height: '100vh',
-      minHeight: '100vh',
-    }),
+    height: '100vh', // For web compatibility
   },
   header: {
     backgroundColor: '#2196F3',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'web' ? 20 : 50,
+    paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    ...(Platform.OS === 'web' && {
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    }),
   },
   backButton: {
     padding: 8,
@@ -603,10 +646,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    ...(Platform.OS === 'web' && {
-      maxHeight: 'calc(100vh - 120px)',
-      overflowY: 'auto',
-    }),
+    maxHeight: 'calc(100vh - 120px)', // Subtract header height
   },
   contentContainer: {
     paddingBottom: 40,
@@ -625,19 +665,11 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
-    // Cross-platform shadows
-    ...(Platform.OS === 'web' 
-      ? {
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }
-    ),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statCardContent: {
     flexDirection: 'row',
@@ -673,19 +705,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    // Cross-platform shadows
-    ...(Platform.OS === 'web' 
-      ? {
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }
-    ),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardHeader: {
     marginBottom: 20,
@@ -841,16 +865,6 @@ const styles = StyleSheet.create({
     borderColor: '#F44336',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 32,
-    minHeight: 32,
-    // Cross-platform touch feedback
-    ...(Platform.OS === 'web' && {
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      ':hover': {
-        backgroundColor: '#FFF5F5',
-      },
-    }),
   },
   deleteButtonDisabled: {
     opacity: 0.5,
@@ -892,15 +906,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginVertical: 20,
     marginHorizontal: 20,
-    // Cross-platform touch feedback
-    ...(Platform.OS === 'web' && {
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      ':hover': {
-        backgroundColor: '#FFF5F5',
-        borderColor: '#E53935',
-      },
-    }),
   },
   clearButtonText: {
     fontSize: 16,
@@ -910,5 +915,98 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  
+  // Empty State Styles
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
+    opacity: 0.6,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#424242',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyDescription: {
+    fontSize: 16,
+    color: '#757575',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+    maxWidth: 300,
+  },
+  emptyFeatures: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  emptyFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  emptyFeatureText: {
+    fontSize: 14,
+    color: '#9E9E9E',
+    marginLeft: 12,
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    elevation: 2,
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  startButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2196F3',
+    marginLeft: 8,
+  },
+  
+  // Component Empty States
+  emptyWordCloudContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyCategoryContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyRatingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyComponentTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#757575',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyComponentText: {
+    fontSize: 14,
+    color: '#9E9E9E',
+    textAlign: 'center',
+    maxWidth: 250,
   },
 });

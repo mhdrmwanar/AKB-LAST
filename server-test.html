@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AKB Server API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .button { padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; color: white; }
+        .primary { background: #2196F3; } .success { background: #4CAF50; } .danger { background: #f44336; }
+        .warning { background: #FF9800; } .info { background: #00BCD4; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .online { background: #e8f5e8; border-left: 4px solid #4CAF50; }
+        .offline { background: #ffebee; border-left: 4px solid #f44336; }
+        #output { background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; 
+                  white-space: pre-wrap; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AKB Feedback Server API Test</h1>
+        
+        <div class="status" id="serverStatus">
+            <strong>Status Server:</strong> <span id="statusText">Mengecek...</span>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>📊 Server Info</h3>
+                <button class="button info" onclick="checkServer()">🔍 Cek Status Server</button>
+                <button class="button primary" onclick="getFeedbacks()">📋 Get All Feedbacks</button>
+                <button class="button warning" onclick="getStats()">📈 Get Statistics</button>
+            </div>
+
+            <div class="card">
+                <h3>✍️ Test Data</h3>
+                <button class="button success" onclick="addTestFeedback()">➕ Add Test Feedback</button>
+                <button class="button success" onclick="addMultipleFeedbacks()">➕ Add 3 Test Feedbacks</button>
+                <button class="button danger" onclick="clearAll()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+
+        <h3>📝 API Response Log:</h3>
+        <div id="output">Klik tombol di atas untuk test API endpoints...\n</div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3>🔧 Setup Instructions:</h3>
+            <ol>
+                <li><strong>Web</strong>: Langsung bisa connect ke localhost:3001</li>
+                <li><strong>Android</strong>: Perlu IP address komputer (bukan localhost)</li>
+                <li>Cek IP dengan command: <code>ipconfig</code> di Command Prompt</li>
+                <li>Update file <code>src/services/apiService.js</code> dengan IP yang benar</li>
+                <li>Restart aplikasi setelah update IP</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let feedbackCounter = 1;
+        const API_BASE = 'http://localhost:3001';
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '📡';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateServerStatus(online) {
+            const statusDiv = document.getElementById('serverStatus');
+            const statusText = document.getElementById('statusText');
+            
+            if (online) {
+                statusDiv.className = 'status online';
+                statusText.textContent = '🟢 ONLINE - Server siap digunakan!';
+            } else {
+                statusDiv.className = 'status offline';
+                statusText.textContent = '🔴 OFFLINE - Pastikan server berjalan di port 3001';
+            }
+        }
+
+        async function checkServer() {
+            log('Mengecek status server...');
+            try {
+                const response = await fetch(API_BASE);
+                const data = await response.json();
+                log(`Server online: ${data.message}`);
+                log(`Available endpoints: ${Object.keys(data.endpoints).join(', ')}`);
+                updateServerStatus(true);
+            } catch (error) {
+                log(`Server offline: ${error.message}`, 'error');
+                updateServerStatus(false);
+            }
+        }
+
+        async function getFeedbacks() {
+            log('Mengambil semua feedbacks...');
+            try {
+                const response = await fetch(`${API_BASE}/feedbacks`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`Total feedbacks: ${data.count}`, 'success');
+                    if (data.data.length > 0) {
+                        log('Sample feedbacks:');
+                        data.data.slice(0, 3).forEach((feedback, index) => {
+                            log(`  ${index + 1}. ${feedback.text} (Rating: ${feedback.rating}/5)`);
+                        });
+                    } else {
+                        log('Belum ada feedback tersimpan');
+                    }
+                } else {
+                    log('Failed to get feedbacks', 'error');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getStats() {
+            log('Mengambil statistik...');
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    log('📊 STATISTIK FEEDBACK:', 'success');
+                    log(`  Total: ${stats.total}`);
+                    log(`  Positive: ${stats.positive}, Negative: ${stats.negative}, Neutral: ${stats.neutral}`);
+                    log(`  Anonymous: ${stats.anonymous}`);
+                    log(`  Average Rating: ${stats.averageRating.toFixed(1)}/5`);
+                    log(`  Categories: ${JSON.stringify(stats.categories)}`);
+                } else {
+                    log('Failed to get stats', 'error');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addTestFeedback() {
+            log('Menambahkan test feedback...');
+            
+            const testFeedback = {
+                text: `Test feedback #${feedbackCounter} dari Web Browser`,
+                rating: Math.floor(Math.random() * 5) + 1,
+                name: `Web Tester ${feedbackCounter}`,
+                category: ['general', 'service', 'product', 'suggestion'][Math.floor(Math.random() * 4)],
+                isAnonymous: Math.random() > 0.5
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/feedbacks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testFeedback)
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    log(`✅ Feedback ditambahkan: "${testFeedback.text}" (Rating: ${testFeedback.rating}/5)`, 'success');
+                    log(`Total feedback sekarang: ${data.count}`);
+                    feedbackCounter++;
+                } else {
+                    log('Failed to add feedback', 'error');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addMultipleFeedbacks() {
+            log('Menambahkan 3 test feedbacks...');
+            for (let i = 0; i < 3; i++) {
+                await addTestFeedback();
+                await new Promise(resolve => setTimeout(resolve, 500)); // Delay
+            }
+        }
+
+        async function clearAll() {
+            if (!confirm('Hapus semua feedback? Tindakan ini tidak bisa dibatalkan!')) return;
+            
+            log('Menghapus semua feedbacks...');
+            try {
+                const response = await fetch(`${API_BASE}/feedbacks`, { method: 'DELETE' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('🧹 Semua feedback berhasil dihapus', 'success');
+                    feedbackCounter = 1;
+                } else {
+                    log('Failed to clear feedbacks', 'error');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        checkServer();
+        log('🚀 AKB Server API Test siap digunakan!');
+        log('Test semua endpoint untuk memastikan server bekerja dengan baik.');
+    </script>
+</body>
+</html>

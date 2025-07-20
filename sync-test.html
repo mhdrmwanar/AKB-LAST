@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AKB Feedback Sync Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .primary { background: #2196F3; color: white; }
+        .success { background: #4CAF50; color: white; }
+        .danger { background: #f44336; color: white; }
+        .info { background: #f9f9f9; padding: 10px; border-left: 4px solid #2196F3; margin: 10px 0; }
+        #output { background: #f9f9f9; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 AKB Feedback Sync Test</h1>
+        <div class="info">
+            <strong>Platform:</strong> Web Browser<br>
+            <strong>Storage:</strong> localStorage<br>
+            <strong>Shared Key:</strong> akb_feedbacks_shared
+        </div>
+        
+        <button class="button primary" onclick="checkCurrentData()">📊 Cek Data Saat Ini</button>
+        <button class="button success" onclick="addTestData()">➕ Tambah Data Test</button>
+        <button class="button primary" onclick="syncData()">🔄 Sinkronkan Data</button>
+        <button class="button danger" onclick="clearAllData()">🗑️ Hapus Semua Data</button>
+        
+        <h3>Output:</h3>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function checkCurrentData() {
+            log('=== MENGECEK DATA SAAT INI ===');
+            
+            const regularData = localStorage.getItem('feedbacks');
+            const sharedData = localStorage.getItem('akb_feedbacks_shared');
+            
+            log(`Data reguler: ${regularData ? JSON.parse(regularData).length + ' items' : 'kosong'}`);
+            log(`Data shared: ${sharedData ? JSON.parse(sharedData).length + ' items' : 'kosong'}`);
+            
+            if (regularData) {
+                const parsed = JSON.parse(regularData);
+                log('Sample data reguler:');
+                parsed.slice(0, 3).forEach((item, index) => {
+                    log(`  ${index + 1}. ${item.text?.substring(0, 50)}... (ID: ${item.id})`);
+                });
+            }
+            
+            if (sharedData) {
+                const parsed = JSON.parse(sharedData);
+                log('Sample data shared:');
+                parsed.slice(0, 3).forEach((item, index) => {
+                    log(`  ${index + 1}. ${item.text?.substring(0, 50)}... (ID: ${item.id})`);
+                });
+            }
+            
+            log('✅ Selesai mengecek data');
+        }
+
+        function addTestData() {
+            log('=== MENAMBAH DATA TEST ===');
+            
+            const testFeedback = {
+                id: `web-test-${Date.now()}`,
+                rating: Math.floor(Math.random() * 5) + 1,
+                text: `Test feedback dari Web pada ${new Date().toLocaleString()}`,
+                name: 'Web Tester',
+                category: 'general',
+                isAnonymous: Math.random() > 0.5,
+                sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)],
+                timestamp: new Date().toISOString(),
+            };
+            
+            // Add to both regular and shared storage
+            const currentRegular = localStorage.getItem('feedbacks');
+            const currentShared = localStorage.getItem('akb_feedbacks_shared');
+            
+            const regularArray = currentRegular ? JSON.parse(currentRegular) : [];
+            const sharedArray = currentShared ? JSON.parse(currentShared) : [];
+            
+            regularArray.push(testFeedback);
+            sharedArray.push(testFeedback);
+            
+            localStorage.setItem('feedbacks', JSON.stringify(regularArray));
+            localStorage.setItem('akb_feedbacks_shared', JSON.stringify(sharedArray));
+            
+            log(`✅ Data test ditambahkan: "${testFeedback.text}"`);
+            log(`Total data sekarang: ${regularArray.length} items`);
+        }
+
+        function syncData() {
+            log('=== SINKRONISASI DATA ===');
+            
+            const regularData = localStorage.getItem('feedbacks');
+            const sharedData = localStorage.getItem('akb_feedbacks_shared');
+            
+            let finalData = [];
+            
+            if (regularData && sharedData) {
+                const regularParsed = JSON.parse(regularData);
+                const sharedParsed = JSON.parse(sharedData);
+                
+                log(`Data reguler: ${regularParsed.length} items`);
+                log(`Data shared: ${sharedParsed.length} items`);
+                
+                // Merge dan deduplicate berdasarkan ID
+                const merged = [...regularParsed, ...sharedParsed];
+                const unique = merged.filter((item, index, self) => 
+                    index === self.findIndex(t => t.id === item.id)
+                );
+                
+                finalData = unique;
+                log(`Setelah merge dan deduplicate: ${finalData.length} items`);
+                
+            } else if (regularData) {
+                finalData = JSON.parse(regularData);
+                log(`Menggunakan data reguler: ${finalData.length} items`);
+            } else if (sharedData) {
+                finalData = JSON.parse(sharedData);
+                log(`Menggunakan data shared: ${finalData.length} items`);
+            }
+            
+            // Save the final data to both storages
+            localStorage.setItem('feedbacks', JSON.stringify(finalData));
+            localStorage.setItem('akb_feedbacks_shared', JSON.stringify(finalData));
+            
+            log(`✅ Sinkronisasi selesai: ${finalData.length} total items`);
+        }
+
+        function clearAllData() {
+            if (confirm('Hapus semua data? Ini tidak bisa dibatalkan!')) {
+                log('=== MENGHAPUS SEMUA DATA ===');
+                
+                localStorage.removeItem('feedbacks');
+                localStorage.removeItem('akb_feedbacks_shared');
+                
+                log('✅ Semua data telah dihapus');
+            }
+        }
+
+        // Initialize
+        log('🚀 AKB Feedback Sync Test dimuat');
+        log('Platform: Web Browser');
+        checkCurrentData();
+    </script>
+</body>
+</html>
