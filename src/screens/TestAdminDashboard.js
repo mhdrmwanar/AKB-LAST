@@ -8,6 +8,8 @@ import {
   RefreshControl,
   Alert,
   Platform,
+  StatusBar,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
@@ -421,23 +423,25 @@ export default function TestAdminDashboard({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0D1421" />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color="#64FFDA" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Dashboard Analitik</Text>
-          <Text style={styles.headerSubtitle}>Wawasan feedback real-time</Text>
+          <Text style={styles.headerTitle}>Admin Dashboard</Text>
+          <Text style={styles.headerSubtitle}>Kelola & analisis feedback</Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate('UserDashboard')}
           style={styles.addButton}
         >
-          <Ionicons name="add" size={20} color="#fff" />
+          <Ionicons name="person-add" size={20} color="#64FFDA" />
         </TouchableOpacity>
       </View>
 
@@ -447,8 +451,14 @@ export default function TestAdminDashboard({ navigation }) {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        scrollEnabled={true}
+        bounces={Platform.OS !== 'web'}
         nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        overScrollMode={Platform.OS !== 'web' ? 'always' : 'never'}
+        scrollEventThrottle={16}
       >
         {/* Stats Cards */}
         <View style={styles.statsGrid}>
@@ -540,51 +550,73 @@ export default function TestAdminDashboard({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    height: '100vh', // For web compatibility
+    backgroundColor: '#0D1421',
+    ...(Platform.OS === 'web' && {
+      height: '100vh',
+      overflow: 'hidden',
+    }),
   },
   header: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#1A2332',
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#263244',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   backButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 25,
+    backgroundColor: 'rgba(100, 255, 218, 0.1)',
   },
   headerContent: {
     flex: 1,
     marginLeft: 16,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFFFFF',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#E3F2FD',
+    color: '#B0BEC5',
     marginTop: 2,
   },
   addButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 25,
+    backgroundColor: 'rgba(100, 255, 218, 0.1)',
   },
   content: {
     flex: 1,
-    padding: 20,
-    maxHeight: 'calc(100vh - 120px)', // Subtract header height
+    backgroundColor: '#0D1421',
+    ...(Platform.OS === 'web' && {
+      maxHeight: 'calc(100vh - 150px)',
+      overflow: 'scroll',
+      WebkitOverflowScrolling: 'touch',
+    }),
   },
   contentContainer: {
-    paddingBottom: 40,
-    flexGrow: 1,
+    padding: 20,
+    paddingBottom: 120,
+    ...(Platform.OS === 'web' && {
+      minHeight: '100%',
+      paddingBottom: 50,
+    }),
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 25,
   },
   statCard: {
     width: '48%',

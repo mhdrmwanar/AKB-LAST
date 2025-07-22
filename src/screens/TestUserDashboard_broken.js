@@ -103,13 +103,13 @@ export default function TestUserDashboard({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <StatusBar barStyle="light-content" backgroundColor="#0D1421" />
-
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -140,9 +140,7 @@ export default function TestUserDashboard({ navigation }) {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
-            {stats.averageRating.toFixed(1)}
-          </Text>
+          <Text style={styles.statNumber}>{stats.averageRating.toFixed(1)}</Text>
           <Text style={styles.statLabel}>Rata-rata</Text>
         </View>
         <View style={styles.statDivider} />
@@ -152,16 +150,16 @@ export default function TestUserDashboard({ navigation }) {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.content}
+      <ScrollView 
+        style={styles.content} 
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={true}
-        bounces={Platform.OS !== 'web'}
+        bounces={true}
         scrollEnabled={true}
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        overScrollMode={Platform.OS !== 'web' ? 'always' : 'never'}
+        overScrollMode="always"
         scrollEventThrottle={16}
       >
         {/* Anonymous Toggle */}
@@ -169,18 +167,18 @@ export default function TestUserDashboard({ navigation }) {
           <Text style={styles.sectionTitle}>Mode Privasi</Text>
           <View style={styles.toggleContainer}>
             <View style={styles.toggleInfo}>
-              <Ionicons
-                name={isAnonymous ? 'shield-checkmark' : 'person'}
-                size={24}
-                color={isAnonymous ? '#64FFDA' : '#B0BEC5'}
+              <Ionicons 
+                name={isAnonymous ? "shield-checkmark" : "person"} 
+                size={24} 
+                color={isAnonymous ? "#64FFDA" : "#B0BEC5"} 
               />
               <View style={styles.toggleTextContainer}>
                 <Text style={styles.toggleLabel}>
                   {isAnonymous ? 'Mode Anonim' : 'Mode Terbuka'}
                 </Text>
                 <Text style={styles.toggleSubtext}>
-                  {isAnonymous
-                    ? 'Identitas Anda akan disembunyikan'
+                  {isAnonymous 
+                    ? 'Identitas Anda akan disembunyikan' 
                     : 'Nama Anda akan ditampilkan'}
                 </Text>
               </View>
@@ -193,6 +191,7 @@ export default function TestUserDashboard({ navigation }) {
             />
           </View>
         </View>
+
         {/* Name Input */}
         {!isAnonymous && (
           <View style={styles.card}>
@@ -206,6 +205,7 @@ export default function TestUserDashboard({ navigation }) {
             />
           </View>
         )}
+
         {/* Category Selection */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Kategori Feedback</Text>
@@ -216,25 +216,19 @@ export default function TestUserDashboard({ navigation }) {
                 style={[
                   styles.categoryCard,
                   selectedCategory === category.id && styles.categoryCardActive,
-                  { borderColor: category.color },
+                  { borderColor: category.color }
                 ]}
                 onPress={() => setSelectedCategory(category.id)}
               >
                 <Ionicons
                   name={category.icon}
                   size={24}
-                  color={
-                    selectedCategory === category.id
-                      ? category.color
-                      : '#546E7A'
-                  }
+                  color={selectedCategory === category.id ? category.color : '#546E7A'}
                 />
                 <Text
                   style={[
                     styles.categoryLabel,
-                    selectedCategory === category.id && {
-                      color: category.color,
-                    },
+                    selectedCategory === category.id && { color: category.color }
                   ]}
                 >
                   {category.label}
@@ -243,19 +237,17 @@ export default function TestUserDashboard({ navigation }) {
             ))}
           </View>
         </View>
+
         {/* Rating */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Rating Kepuasan</Text>
-          <Text style={styles.ratingSubtext}>
-            Berikan rating dari 1-5 bintang
-          </Text>
+          <Text style={styles.ratingSubtext}>Berikan rating dari 1-5 bintang</Text>
           {renderStars()}
           <Text style={styles.ratingText}>
-            {rating > 0
-              ? `Anda memberikan ${rating} bintang`
-              : 'Belum ada rating'}
+            {rating > 0 ? `Anda memberikan ${rating} bintang` : 'Belum ada rating'}
           </Text>
         </View>
+
         {/* Feedback Text */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Feedback Anda</Text>
@@ -273,12 +265,10 @@ export default function TestUserDashboard({ navigation }) {
             {feedbackText.length}/500 karakter
           </Text>
         </View>
+
         {/* Submit Button */}
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            isSubmitting && styles.submitButtonDisabled,
-          ]}
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
@@ -291,6 +281,7 @@ export default function TestUserDashboard({ navigation }) {
             </>
           )}
         </TouchableOpacity>
+
         <View style={styles.bottomPadding} />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -301,11 +292,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      height: '100vh',
-      overflow: 'hidden',
-      position: 'relative',
-    }),
   },
   header: {
     backgroundColor: '#1A2332',
@@ -316,17 +302,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#263244',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          elevation: 5,
-        }),
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 5,
+    }),
   },
   backButton: {
     padding: 10,
@@ -382,19 +366,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      maxHeight: 'calc(100vh - 150px)',
-      overflow: 'scroll',
-      WebkitOverflowScrolling: 'touch',
-    }),
   },
   scrollContainer: {
     padding: 20,
     paddingBottom: 120,
-    ...(Platform.OS === 'web' && {
-      minHeight: '100%',
-      paddingBottom: 50,
-    }),
   },
   contentContainer: {
     padding: 20,
@@ -408,17 +383,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#263244',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }),
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
+    }),
   },
   sectionTitle: {
     fontSize: 18,
@@ -520,27 +493,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 8px rgba(100, 255, 218, 0.3)',
-        }
-      : {
-          shadowColor: '#64FFDA',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }),
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 4px 8px rgba(100, 255, 218, 0.3)',
+    } : {
+      shadowColor: '#64FFDA',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
+    }),
   },
   submitButtonDisabled: {
     backgroundColor: '#37474F',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: 'none',
-        }
-      : {
-          shadowOpacity: 0,
-        }),
+    ...(Platform.OS === 'web' ? {
+      boxShadow: 'none',
+    } : {
+      shadowOpacity: 0,
+    }),
   },
   submitButtonText: {
     color: '#fff',

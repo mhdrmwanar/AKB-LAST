@@ -8,9 +8,9 @@ import {
   ScrollView,
   Switch,
   Alert,
-  StatusBar,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
@@ -25,9 +25,9 @@ export default function TestUserDashboard({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState('general');
 
   const categories = [
-    { id: 'general', label: 'Umum', icon: 'chatbox', color: '#64FFDA' },
-    { id: 'service', label: 'Layanan', icon: 'people', color: '#1E88E5' },
-    { id: 'product', label: 'Produk', icon: 'cube', color: '#FF6B35' },
+    { id: 'general', label: 'Umum', icon: 'chatbox', color: '#2196F3' },
+    { id: 'service', label: 'Layanan', icon: 'people', color: '#4CAF50' },
+    { id: 'product', label: 'Produk', icon: 'cube', color: '#FF9800' },
     { id: 'suggestion', label: 'Saran', icon: 'bulb', color: '#9C27B0' },
   ];
 
@@ -51,63 +51,78 @@ export default function TestUserDashboard({ navigation }) {
     }
 
     setIsSubmitting(true);
+
     try {
-      await submitFeedback({
-        name: isAnonymous ? 'Anonim' : name,
+      const success = submitFeedback({
         text: feedbackText,
-        rating,
+        rating: rating,
+        name: name.trim() || 'Anonymous',
         category: selectedCategory,
-        isAnonymous,
       });
 
-      Alert.alert(
-        'Berhasil',
-        'Feedback Anda telah berhasil dikirim. Terima kasih!',
-        [
+      if (success) {
+        Alert.alert('Terima Kasih!', 'Feedback Anda berhasil dikirim!', [
           {
-            text: 'OK',
+            text: 'Lihat Analitik',
             onPress: () => {
-              setName('');
-              setFeedbackText('');
-              setRating(0);
-              setSelectedCategory('general');
+              resetForm();
+              navigation.navigate('TestAdminDashboard');
             },
           },
-        ]
-      );
+          {
+            text: 'Kirim Lagi',
+            onPress: () => resetForm(),
+          },
+        ]);
+      }
     } catch (error) {
-      Alert.alert('Error', 'Gagal mengirim feedback. Silakan coba lagi.');
+      Alert.alert('Gagal Mengirim', 'Silakan coba lagi nanti.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const resetForm = () => {
+    setName('');
+    setFeedbackText('');
+    setRating(0);
+    setSelectedCategory('general');
+  };
+
   const renderStars = () => {
     return (
       <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => setRating(star)}
-            style={styles.starButton}
-          >
-            <Ionicons
-              name={star <= rating ? 'star' : 'star-outline'}
-              size={32}
-              color={star <= rating ? '#FFD700' : '#546E7A'}
-            />
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.ratingLabel}>Beri nilai pengalaman Anda</Text>
+        <View style={styles.stars}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <TouchableOpacity
+              key={star}
+              onPress={() => setRating(star)}
+              style={styles.star}
+            >
+              <Ionicons
+                name={star <= rating ? 'star' : 'star-outline'}
+                size={32}
+                color={star <= rating ? '#FFD700' : '#DDD'}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+        {rating > 0 && (
+          <Text style={styles.ratingText}>
+            {
+              ['', 'Buruk', 'Kurang', 'Baik', 'Sangat Baik', 'Luar Biasa'][
+                rating
+              ]
+            }
+          </Text>
+        )}
       </View>
     );
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D1421" />
 
       {/* Header */}
@@ -125,7 +140,7 @@ export default function TestUserDashboard({ navigation }) {
           </Text>
         </View>
         <TouchableOpacity
-          onPress={() => navigation.navigate('TestAdminDashboard')}
+          onPress={() => navigation.navigate('AdminDashboard')}
           style={styles.analyticsButton}
         >
           <Ionicons name="analytics" size={20} color="#64FFDA" />
@@ -135,77 +150,59 @@ export default function TestUserDashboard({ navigation }) {
       {/* Stats Bar */}
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats.totalFeedbacks}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Ionicons name="people" size={16} color="#4CAF50" />
+          <Text style={styles.statText}>{stats.total} tanggapan</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
-            {stats.averageRating.toFixed(1)}
+          <Ionicons name="star" size={16} color="#FFD700" />
+          <Text style={styles.statText}>
+            {stats.averageRating || '0'} rata-rata
           </Text>
-          <Text style={styles.statLabel}>Rata-rata</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats.todayCount}</Text>
-          <Text style={styles.statLabel}>Hari ini</Text>
         </View>
       </View>
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={true}
-        bounces={Platform.OS !== 'web'}
-        scrollEnabled={true}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        overScrollMode={Platform.OS !== 'web' ? 'always' : 'never'}
-        scrollEventThrottle={16}
       >
         {/* Anonymous Toggle */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Mode Privasi</Text>
           <View style={styles.toggleContainer}>
             <View style={styles.toggleInfo}>
-              <Ionicons
-                name={isAnonymous ? 'shield-checkmark' : 'person'}
-                size={24}
-                color={isAnonymous ? '#64FFDA' : '#B0BEC5'}
-              />
+              <Ionicons name="shield-checkmark" size={24} color="#4CAF50" />
               <View style={styles.toggleTextContainer}>
-                <Text style={styles.toggleLabel}>
-                  {isAnonymous ? 'Mode Anonim' : 'Mode Terbuka'}
-                </Text>
+                <Text style={styles.toggleLabel}>Feedback Anonim</Text>
                 <Text style={styles.toggleSubtext}>
-                  {isAnonymous
-                    ? 'Identitas Anda akan disembunyikan'
-                    : 'Nama Anda akan ditampilkan'}
+                  Identitas Anda akan tetap rahasia
                 </Text>
               </View>
             </View>
             <Switch
               value={isAnonymous}
               onValueChange={setIsAnonymous}
-              trackColor={{ false: '#263244', true: '#64FFDA' }}
-              thumbColor={isAnonymous ? '#FFFFFF' : '#B0BEC5'}
+              trackColor={{ false: '#DDD', true: '#4CAF50' }}
+              thumbColor="#fff"
             />
           </View>
         </View>
+
         {/* Name Input */}
         {!isAnonymous && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Nama Anda</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Masukkan nama Anda"
-              placeholderTextColor="#546E7A"
+              placeholder="Masukkan nama lengkap Anda"
               value={name}
               onChangeText={setName}
+              autoCapitalize="words"
             />
           </View>
         )}
+
         {/* Category Selection */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Kategori Feedback</Text>
@@ -215,8 +212,11 @@ export default function TestUserDashboard({ navigation }) {
                 key={category.id}
                 style={[
                   styles.categoryCard,
-                  selectedCategory === category.id && styles.categoryCardActive,
-                  { borderColor: category.color },
+                  selectedCategory === category.id && {
+                    backgroundColor: category.color + '20',
+                    borderColor: category.color,
+                    borderWidth: 2,
+                  },
                 ]}
                 onPress={() => setSelectedCategory(category.id)}
               >
@@ -224,9 +224,7 @@ export default function TestUserDashboard({ navigation }) {
                   name={category.icon}
                   size={24}
                   color={
-                    selectedCategory === category.id
-                      ? category.color
-                      : '#546E7A'
+                    selectedCategory === category.id ? category.color : '#666'
                   }
                 />
                 <Text
@@ -234,6 +232,7 @@ export default function TestUserDashboard({ navigation }) {
                     styles.categoryLabel,
                     selectedCategory === category.id && {
                       color: category.color,
+                      fontWeight: '600',
                     },
                   ]}
                 >
@@ -243,36 +242,27 @@ export default function TestUserDashboard({ navigation }) {
             ))}
           </View>
         </View>
+
         {/* Rating */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Rating Kepuasan</Text>
-          <Text style={styles.ratingSubtext}>
-            Berikan rating dari 1-5 bintang
-          </Text>
-          {renderStars()}
-          <Text style={styles.ratingText}>
-            {rating > 0
-              ? `Anda memberikan ${rating} bintang`
-              : 'Belum ada rating'}
-          </Text>
-        </View>
+        <View style={styles.card}>{renderStars()}</View>
+
         {/* Feedback Text */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Feedback Anda</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
-            placeholder="Tulis feedback, saran, atau kritik Anda di sini..."
-            placeholderTextColor="#546E7A"
-            multiline
-            numberOfLines={4}
+            placeholder="Silakan bagikan feedback, saran, atau keluhan Anda secara detail..."
             value={feedbackText}
             onChangeText={setFeedbackText}
-            maxLength={500}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
           />
           <Text style={styles.charCounter}>
             {feedbackText.length}/500 karakter
           </Text>
         </View>
+
         {/* Submit Button */}
         <TouchableOpacity
           style={[
@@ -283,7 +273,10 @@ export default function TestUserDashboard({ navigation }) {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <Text style={styles.submitButtonText}>Mengirim...</Text>
+            <>
+              <Ionicons name="hourglass" size={20} color="#fff" />
+              <Text style={styles.submitButtonText}>Mengirim...</Text>
+            </>
           ) : (
             <>
               <Ionicons name="send" size={20} color="#fff" />
@@ -291,9 +284,10 @@ export default function TestUserDashboard({ navigation }) {
             </>
           )}
         </TouchableOpacity>
+
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -301,11 +295,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      height: '100vh',
-      overflow: 'hidden',
-      position: 'relative',
-    }),
   },
   header: {
     backgroundColor: '#1A2332',
@@ -316,17 +305,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#263244',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          elevation: 5,
-        }),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   backButton: {
     padding: 10,
@@ -352,6 +335,15 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: 'rgba(100, 255, 218, 0.1)',
   },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#E3F2FD',
+  },
+  analyticsButton: {
+    padding: 10,
+    borderRadius: 25,
+    backgroundColor: 'rgba(100, 255, 218, 0.1)',
+  },
   statsBar: {
     backgroundColor: '#1A2332',
     flexDirection: 'row',
@@ -359,72 +351,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#263244',
+    borderBottomColor: '#f0f0f0',
   },
   statItem: {
-    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#64FFDA',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#B0BEC5',
-    marginTop: 2,
+  statText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 6,
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#263244',
-    marginHorizontal: 15,
+    height: 16,
+    backgroundColor: '#e0e0e0',
+    marginHorizontal: 16,
   },
   content: {
     flex: 1,
-    backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      maxHeight: 'calc(100vh - 150px)',
-      overflow: 'scroll',
-      WebkitOverflowScrolling: 'touch',
-    }),
-  },
-  scrollContainer: {
     padding: 20,
-    paddingBottom: 120,
-    ...(Platform.OS === 'web' && {
-      minHeight: '100%',
-      paddingBottom: 50,
-    }),
+    maxHeight: 'calc(100vh - 120px)', // Subtract header height
   },
   contentContainer: {
-    padding: 20,
-    paddingBottom: 120,
+    paddingBottom: 40,
     flexGrow: 1,
   },
   card: {
-    backgroundColor: '#1A2332',
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#263244',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }),
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
   },
   toggleContainer: {
     flexDirection: 'row',
@@ -438,36 +407,34 @@ const styles = StyleSheet.create({
   },
   toggleTextContainer: {
     marginLeft: 12,
-    flex: 1,
   },
   toggleLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#333',
   },
   toggleSubtext: {
-    fontSize: 12,
-    color: '#B0BEC5',
+    fontSize: 14,
+    color: '#666',
     marginTop: 2,
   },
   textInput: {
-    backgroundColor: '#263244',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
     borderRadius: 12,
     padding: 16,
-    color: '#FFFFFF',
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#37474F',
+    backgroundColor: '#fafafa',
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
   charCounter: {
+    fontSize: 12,
+    color: '#999',
     textAlign: 'right',
     marginTop: 8,
-    color: '#B0BEC5',
-    fontSize: 12,
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -476,71 +443,58 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     width: '48%',
-    backgroundColor: '#263244',
+    backgroundColor: '#fafafa',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#37474F',
-  },
-  categoryCardActive: {
-    backgroundColor: 'rgba(100, 255, 218, 0.1)',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   categoryLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#B0BEC5',
+    color: '#666',
     marginTop: 8,
     textAlign: 'center',
   },
-  ratingSubtext: {
-    fontSize: 14,
-    color: '#B0BEC5',
-    marginBottom: 20,
-  },
   starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 15,
+    alignItems: 'center',
   },
-  starButton: {
-    padding: 5,
-    marginHorizontal: 2,
+  ratingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  stars: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  star: {
+    marginHorizontal: 4,
+    padding: 4,
   },
   ratingText: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#B0BEC5',
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
   },
   submitButton: {
-    backgroundColor: '#64FFDA',
-    borderRadius: 12,
-    padding: 18,
+    backgroundColor: '#2196F3',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 8px rgba(100, 255, 218, 0.3)',
-        }
-      : {
-          shadowColor: '#64FFDA',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }),
+    padding: 18,
+    borderRadius: 16,
+    marginVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   submitButtonDisabled: {
-    backgroundColor: '#37474F',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: 'none',
-        }
-      : {
-          shadowOpacity: 0,
-        }),
+    backgroundColor: '#BBB',
   },
   submitButtonText: {
     color: '#fff',

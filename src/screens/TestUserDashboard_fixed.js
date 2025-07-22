@@ -156,12 +156,12 @@ export default function TestUserDashboard({ navigation }) {
         style={styles.content}
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={true}
-        bounces={Platform.OS !== 'web'}
+        bounces={true}
         scrollEnabled={true}
         nestedScrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        overScrollMode={Platform.OS !== 'web' ? 'always' : 'never'}
+        overScrollMode="always"
         scrollEventThrottle={16}
       >
         {/* Anonymous Toggle */}
@@ -193,6 +193,7 @@ export default function TestUserDashboard({ navigation }) {
             />
           </View>
         </View>
+
         {/* Name Input */}
         {!isAnonymous && (
           <View style={styles.card}>
@@ -206,6 +207,7 @@ export default function TestUserDashboard({ navigation }) {
             />
           </View>
         )}
+
         {/* Category Selection */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Kategori Feedback</Text>
@@ -243,6 +245,7 @@ export default function TestUserDashboard({ navigation }) {
             ))}
           </View>
         </View>
+
         {/* Rating */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Rating Kepuasan</Text>
@@ -256,6 +259,7 @@ export default function TestUserDashboard({ navigation }) {
               : 'Belum ada rating'}
           </Text>
         </View>
+
         {/* Feedback Text */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Feedback Anda</Text>
@@ -273,6 +277,7 @@ export default function TestUserDashboard({ navigation }) {
             {feedbackText.length}/500 karakter
           </Text>
         </View>
+
         {/* Submit Button */}
         <TouchableOpacity
           style={[
@@ -291,6 +296,7 @@ export default function TestUserDashboard({ navigation }) {
             </>
           )}
         </TouchableOpacity>
+
         <View style={styles.bottomPadding} />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -301,11 +307,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      height: '100vh',
-      overflow: 'hidden',
-      position: 'relative',
-    }),
   },
   header: {
     backgroundColor: '#1A2332',
@@ -382,19 +383,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      maxHeight: 'calc(100vh - 150px)',
-      overflow: 'scroll',
-      WebkitOverflowScrolling: 'touch',
-    }),
   },
   scrollContainer: {
     padding: 20,
     paddingBottom: 120,
-    ...(Platform.OS === 'web' && {
-      minHeight: '100%',
-      paddingBottom: 50,
-    }),
   },
   contentContainer: {
     padding: 20,

@@ -1,8 +1,13 @@
 import React from 'react';
-import { StatusBar, View, Text } from 'react-native';
+import { StatusBar, View, Text, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { FeedbackProvider } from './src/context/FeedbackContext';
+
+// Import CSS for web platform
+if (Platform.OS === 'web') {
+  require('./web-scrolling-fix.css');
+}
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';

@@ -5,144 +5,68 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a237e" />
+      <StatusBar barStyle="light-content" backgroundColor="#0D1421" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Aplikasi Feedback Live</Text>
-          <Text style={styles.headerSubtitle}>
-            Pilih dashboard Anda untuk memulai
-          </Text>
-        </View>
+      {/* Background Decorations */}
+      <View style={styles.backgroundDecoration}>
+        <View style={[styles.circle, styles.circle1]} />
+        <View style={[styles.circle, styles.circle2]} />
+        <View style={[styles.circle, styles.circle3]} />
       </View>
 
-      {/* Dashboard Selection */}
-      <View style={styles.dashboardContainer}>
-        <Text style={styles.sectionTitle}>Pilih Dashboard</Text>
-        <Text style={styles.sectionSubtitle}>
-          Pilih peran Anda untuk mengakses fitur yang sesuai
-        </Text>
+      {/* App Title */}
+      <View style={styles.titleContainer}>
+        <View style={styles.logoIcon}>
+          <Ionicons name="analytics-outline" size={40} color="#64FFDA" />
+        </View>
+        <Text style={styles.appTitle}>Live Feedback</Text>
+        <Text style={styles.appTitle2}>Survey</Text>
+        <Text style={styles.appSubtitle}>Pilih mode akses untuk memulai</Text>
+      </View>
 
-        {/* User Dashboard Card */}
+      {/* Logo Selection */}
+      <View style={styles.logoContainer}>
+        {/* User Logo */}
         <TouchableOpacity
-          style={[styles.dashboardCard, styles.userCard]}
+          style={styles.logoButton}
           onPress={() => navigation.navigate('UserDashboard')}
-          activeOpacity={0.9}
+          activeOpacity={0.7}
         >
-          <View style={styles.cardGradient}>
-            <View style={styles.cardIconContainer}>
-              <View style={[styles.cardIcon, { backgroundColor: '#4CAF50' }]}>
-                <Ionicons name="person" size={36} color="#fff" />
-              </View>
-              <View style={styles.cardBadge}>
-                <Text style={styles.badgeText}>PENGGUNA</Text>
-              </View>
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Dashboard Pengguna</Text>
-              <Text style={styles.cardDescription}>
-                Kirim feedback, beri rating pengalaman, dan bagikan pendapat
-                Anda secara anonim
-              </Text>
-
-              <View style={styles.cardFeatures}>
-                <View style={styles.featureRow}>
-                  <View style={styles.feature}>
-                    <Ionicons name="star" size={18} color="#4CAF50" />
-                    <Text style={styles.featureText}>Beri Rating</Text>
-                  </View>
-                  <View style={styles.feature}>
-                    <Ionicons
-                      name="shield-checkmark"
-                      size={18}
-                      color="#4CAF50"
-                    />
-                    <Text style={styles.featureText}>Mode Anonim</Text>
-                  </View>
-                </View>
-                <View style={styles.featureRow}>
-                  <View style={styles.feature}>
-                    <Ionicons
-                      name="chatbubble-ellipses"
-                      size={18}
-                      color="#4CAF50"
-                    />
-                    <Text style={styles.featureText}>Feedback Cepat</Text>
-                  </View>
-                  <View style={styles.feature}>
-                    <Ionicons name="send" size={18} color="#4CAF50" />
-                    <Text style={styles.featureText}>Kirim Instan</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <View style={styles.cardArrow}>
-              <Ionicons name="chevron-forward" size={24} color="#4CAF50" />
+          <View style={[styles.logoCircle, styles.userLogo]}>
+            <View style={styles.logoGlow}>
+              <Ionicons name="person" size={50} color="#fff" />
             </View>
           </View>
+          <Text style={styles.logoText}>USER</Text>
+          <Text style={styles.logoSubtext}>Berikan feedback</Text>
         </TouchableOpacity>
 
-        {/* Admin Dashboard Card */}
+        {/* Admin Logo */}
         <TouchableOpacity
-          style={[styles.dashboardCard, styles.adminCard]}
+          style={styles.logoButton}
           onPress={() => navigation.navigate('TestAdminDashboard')}
-          activeOpacity={0.9}
+          activeOpacity={0.7}
         >
-          <View style={styles.cardGradient}>
-            <View style={styles.cardIconContainer}>
-              <View style={[styles.cardIcon, { backgroundColor: '#FF9800' }]}>
-                <Ionicons name="analytics" size={36} color="#fff" />
-              </View>
-              <View style={[styles.cardBadge, { backgroundColor: '#FF9800' }]}>
-                <Text style={styles.badgeText}>ADMIN</Text>
-              </View>
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>Dashboard Admin</Text>
-              <Text style={styles.cardDescription}>
-                Pantau analitik feedback, lihat wawasan data, dan kelola sistem
-              </Text>
-
-              <View style={styles.cardFeatures}>
-                <View style={styles.featureRow}>
-                  <View style={styles.feature}>
-                    <Ionicons name="bar-chart" size={18} color="#FF9800" />
-                    <Text style={styles.featureText}>Analitik Live</Text>
-                  </View>
-                  <View style={styles.feature}>
-                    <Ionicons name="pie-chart" size={18} color="#FF9800" />
-                    <Text style={styles.featureText}>Wawasan Data</Text>
-                  </View>
-                </View>
-                <View style={styles.featureRow}>
-                  <View style={styles.feature}>
-                    <Ionicons name="cloud" size={18} color="#FF9800" />
-                    <Text style={styles.featureText}>Word Cloud</Text>
-                  </View>
-                  <View style={styles.feature}>
-                    <Ionicons name="time" size={18} color="#FF9800" />
-                    <Text style={styles.featureText}>Data Real-time</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-            <View style={styles.cardArrow}>
-              <Ionicons name="chevron-forward" size={24} color="#FF9800" />
+          <View style={[styles.logoCircle, styles.adminLogo]}>
+            <View style={styles.logoGlow}>
+              <Ionicons name="shield-checkmark" size={50} color="#fff" />
             </View>
           </View>
+          <Text style={styles.logoText}>ADMIN</Text>
+          <Text style={styles.logoSubtext}>Kelola sistem</Text>
         </TouchableOpacity>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Pilih dashboard untuk memulai</Text>
+        <Text style={styles.footerText}>Powered by React Native</Text>
       </View>
     </View>
   );
@@ -151,163 +75,167 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  header: {
-    backgroundColor: '#1a237e',
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerContent: {
+    backgroundColor: '#0D1421',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 60,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e1e7ff',
-    textAlign: 'center',
-    opacity: 0.9,
-  },
-  dashboardContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  sectionSubtitle: {
-    fontSize: 16,
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 22,
-  },
-  dashboardCard: {
-    marginBottom: 20,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  userCard: {
-    backgroundColor: '#f0fdf4',
-    borderWidth: 2,
-    borderColor: '#bbf7d0',
-  },
-  adminCard: {
-    backgroundColor: '#fff7ed',
-    borderWidth: 2,
-    borderColor: '#fed7aa',
-  },
-  cardGradient: {
-    padding: 24,
-    borderRadius: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardIconContainer: {
-    position: 'relative',
-    marginRight: 16,
-  },
-  cardIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  cardBadge: {
+  backgroundDecoration: {
     position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  circle: {
+    position: 'absolute',
+    borderRadius: 1000,
+    opacity: 0.1,
+  },
+  circle1: {
+    width: 300,
+    height: 300,
+    backgroundColor: '#64FFDA',
+    top: -150,
+    right: -150,
+  },
+  circle2: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#FF6B6B',
+    bottom: -100,
+    left: -100,
+  },
+  circle3: {
+    width: 150,
+    height: 150,
+    backgroundColor: '#4ECDC4',
+    top: '50%',
+    left: -75,
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  logoIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(100, 255, 218, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: 'rgba(100, 255, 218, 0.3)',
   },
-  badgeText: {
-    fontSize: 10,
+  appTitle: {
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#fff',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    ...(Platform.OS === 'web'
+      ? {
+          textShadow: '0px 0px 10px rgba(100, 255, 218, 0.3)',
+        }
+      : {
+          textShadowColor: 'rgba(100, 255, 218, 0.3)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 10,
+        }),
   },
-  cardContent: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 20,
+  appTitle2: {
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 6,
+    color: '#64FFDA',
+    textAlign: 'center',
+    marginBottom: 10,
+    ...(Platform.OS === 'web'
+      ? {
+          textShadow: '0px 0px 20px rgba(100, 255, 218, 0.5)',
+        }
+      : {
+          textShadowColor: 'rgba(100, 255, 218, 0.5)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 20,
+        }),
   },
-  cardDescription: {
-    fontSize: 14,
-    color: '#64748b',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  cardFeatures: {
-    gap: 8,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-  },
-  featureText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
-    marginLeft: 6,
-  },
-  cardArrow: {
-    marginLeft: 12,
-    padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-  },
-  footer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#64748b',
+  appSubtitle: {
+    fontSize: 16,
+    color: '#B0BEC5',
     textAlign: 'center',
     opacity: 0.8,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    maxWidth: 350,
+  },
+  logoButton: {
+    alignItems: 'center',
+    padding: 15,
+  },
+  logoCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 15,
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  logoGlow: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  userLogo: {
+    backgroundColor: '#1E88E5',
+    shadowColor: '#1E88E5',
+  },
+  adminLogo: {
+    backgroundColor: '#FF6B35',
+    shadowColor: '#FF6B35',
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 2,
+    marginBottom: 5,
+    ...(Platform.OS === 'web'
+      ? {
+          textShadow: '0px 2px 4px rgba(0,0,0,0.5)',
+        }
+      : {
+          textShadowColor: 'rgba(0,0,0,0.5)',
+          textShadowOffset: { width: 0, height: 2 },
+          textShadowRadius: 4,
+        }),
+  },
+  logoSubtext: {
+    fontSize: 12,
+    color: '#B0BEC5',
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#546E7A',
+    opacity: 0.6,
   },
 });

@@ -9,8 +9,6 @@ import {
   Switch,
   Alert,
   StatusBar,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '../context/FeedbackContext';
@@ -103,11 +101,7 @@ export default function TestUserDashboard({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D1421" />
 
       {/* Header */}
@@ -154,15 +148,7 @@ export default function TestUserDashboard({ navigation }) {
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={true}
-        bounces={Platform.OS !== 'web'}
-        scrollEnabled={true}
-        nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        overScrollMode={Platform.OS !== 'web' ? 'always' : 'never'}
-        scrollEventThrottle={16}
+        contentContainerStyle={styles.contentContainer}
       >
         {/* Anonymous Toggle */}
         <View style={styles.card}>
@@ -193,6 +179,7 @@ export default function TestUserDashboard({ navigation }) {
             />
           </View>
         </View>
+
         {/* Name Input */}
         {!isAnonymous && (
           <View style={styles.card}>
@@ -206,6 +193,7 @@ export default function TestUserDashboard({ navigation }) {
             />
           </View>
         )}
+
         {/* Category Selection */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Kategori Feedback</Text>
@@ -243,6 +231,7 @@ export default function TestUserDashboard({ navigation }) {
             ))}
           </View>
         </View>
+
         {/* Rating */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Rating Kepuasan</Text>
@@ -256,6 +245,7 @@ export default function TestUserDashboard({ navigation }) {
               : 'Belum ada rating'}
           </Text>
         </View>
+
         {/* Feedback Text */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Feedback Anda</Text>
@@ -273,6 +263,7 @@ export default function TestUserDashboard({ navigation }) {
             {feedbackText.length}/500 karakter
           </Text>
         </View>
+
         {/* Submit Button */}
         <TouchableOpacity
           style={[
@@ -291,9 +282,10 @@ export default function TestUserDashboard({ navigation }) {
             </>
           )}
         </TouchableOpacity>
+
         <View style={styles.bottomPadding} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -301,11 +293,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      height: '100vh',
-      overflow: 'hidden',
-      position: 'relative',
-    }),
   },
   header: {
     backgroundColor: '#1A2332',
@@ -316,17 +303,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#263244',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          elevation: 5,
-        }),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   backButton: {
     padding: 10,
@@ -382,24 +363,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: '#0D1421',
-    ...(Platform.OS === 'web' && {
-      maxHeight: 'calc(100vh - 150px)',
-      overflow: 'scroll',
-      WebkitOverflowScrolling: 'touch',
-    }),
-  },
-  scrollContainer: {
-    padding: 20,
-    paddingBottom: 120,
-    ...(Platform.OS === 'web' && {
-      minHeight: '100%',
-      paddingBottom: 50,
-    }),
   },
   contentContainer: {
-    padding: 20,
-    paddingBottom: 120,
     flexGrow: 1,
+    padding: 20,
   },
   card: {
     backgroundColor: '#1A2332',
@@ -408,17 +375,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#263244',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
-        }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   sectionTitle: {
     fontSize: 18,
@@ -520,27 +481,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 8px rgba(100, 255, 218, 0.3)',
-        }
-      : {
-          shadowColor: '#64FFDA',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }),
+    shadowColor: '#64FFDA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   submitButtonDisabled: {
     backgroundColor: '#37474F',
-    ...(Platform.OS === 'web'
-      ? {
-          boxShadow: 'none',
-        }
-      : {
-          shadowOpacity: 0,
-        }),
+    shadowOpacity: 0,
   },
   submitButtonText: {
     color: '#fff',
