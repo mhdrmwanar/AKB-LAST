@@ -620,16 +620,23 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: '#fff',
+    backgroundColor: '#1A2332',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: '#263244',
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+        }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        }),
   },
   statCardContent: {
     flexDirection: 'row',
@@ -641,17 +648,18 @@ const styles = StyleSheet.create({
   },
   statCardTitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
     marginBottom: 4,
   },
   statCardValue: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 2,
+    color: '#FFFFFF',
   },
   statCardSubtitle: {
     fontSize: 12,
-    color: '#999',
+    color: '#B0BEC5',
   },
   statCardIcon: {
     width: 48,
@@ -661,15 +669,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1A2332',
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#263244',
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+        }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+        }),
   },
   cardHeader: {
     marginBottom: 20,
@@ -677,11 +693,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#FFFFFF',
   },
   cardSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
     marginTop: 4,
   },
   wordCloudContainer: {
@@ -695,7 +711,7 @@ const styles = StyleSheet.create({
     margin: 4,
   },
   wordCloudText: {
-    color: '#2196F3',
+    color: '#64FFDA',
     fontWeight: '500',
   },
   emptyWordCloud: {
@@ -705,7 +721,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: '#B0BEC5',
     marginTop: 12,
     textAlign: 'center',
   },
@@ -731,15 +747,15 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: '#FFFFFF',
   },
   categoryCount: {
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
   },
   categoryBar: {
     height: 6,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#263244',
     borderRadius: 3,
     marginBottom: 8,
   },
@@ -753,12 +769,12 @@ const styles = StyleSheet.create({
   },
   categoryPercentage: {
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
     fontWeight: '500',
   },
   categoryRating: {
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
   },
   ratingChart: {
     paddingVertical: 10,
@@ -771,12 +787,12 @@ const styles = StyleSheet.create({
   ratingLabel: {
     width: 50,
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
   },
   ratingBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#263244',
     borderRadius: 4,
     marginHorizontal: 12,
   },
@@ -787,12 +803,12 @@ const styles = StyleSheet.create({
   ratingCount: {
     width: 30,
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
     textAlign: 'right',
   },
   feedbackItem: {
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#263244',
     paddingBottom: 16,
     marginBottom: 16,
   },
@@ -812,7 +828,7 @@ const styles = StyleSheet.create({
   feedbackName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: '#FFFFFF',
   },
   feedbackRating: {
     flexDirection: 'row',
@@ -820,7 +836,7 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#fff',
+    backgroundColor: '#1A2332',
     borderWidth: 1,
     borderColor: '#F44336',
     alignItems: 'center',
@@ -832,7 +848,7 @@ const styles = StyleSheet.create({
   },
   feedbackText: {
     fontSize: 14,
-    color: '#666',
+    color: '#B0BEC5',
     lineHeight: 20,
     marginBottom: 8,
   },
@@ -842,12 +858,12 @@ const styles = StyleSheet.create({
   },
   feedbackCategory: {
     fontSize: 12,
-    color: '#2196F3',
+    color: '#64FFDA',
     fontWeight: '500',
   },
   feedbackTime: {
     fontSize: 12,
-    color: '#999',
+    color: '#B0BEC5',
   },
   emptyFeedback: {
     alignItems: 'center',
@@ -858,7 +874,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#1A2332',
     borderWidth: 2,
     borderColor: '#F44336',
     borderRadius: 12,
