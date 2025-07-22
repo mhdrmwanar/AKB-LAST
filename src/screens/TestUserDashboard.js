@@ -135,7 +135,7 @@ export default function TestUserDashboard({ navigation }) {
       {/* Stats Bar */}
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats.totalFeedbacks}</Text>
+          <Text style={styles.statNumber}>{stats.total || 0}</Text>
           <Text style={styles.statLabel}>Total</Text>
         </View>
         <View style={styles.statDivider} />
@@ -147,7 +147,7 @@ export default function TestUserDashboard({ navigation }) {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{stats.todayCount}</Text>
+          <Text style={styles.statNumber}>{stats.todayCount || 0}</Text>
           <Text style={styles.statLabel}>Hari ini</Text>
         </View>
       </View>
@@ -365,9 +365,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#64FFDA',
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,

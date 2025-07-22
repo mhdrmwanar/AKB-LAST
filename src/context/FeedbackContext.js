@@ -70,6 +70,7 @@ export const FeedbackProvider = ({ children }) => {
     anonymous: 0,
     averageRating: 0,
     satisfactionRate: 0,
+    todayCount: 0,
   });
 
   // Load saved feedbacks on app start
@@ -288,6 +289,14 @@ export const FeedbackProvider = ({ children }) => {
     const neutral = feedbacks.filter((f) => f.sentiment === 'neutral').length;
     const anonymous = feedbacks.filter((f) => f.isAnonymous).length;
 
+    // Calculate today's feedback count
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayCount = feedbacks.filter((f) => {
+      const feedbackDate = new Date(f.timestamp);
+      return feedbackDate >= todayStart;
+    }).length;
+
     const averageRating =
       total > 0
         ? feedbacks.reduce((sum, f) => {
@@ -311,6 +320,7 @@ export const FeedbackProvider = ({ children }) => {
       anonymous,
       averageRating: Math.round(averageRating * 10) / 10,
       satisfactionRate,
+      todayCount,
     });
   };
 
@@ -350,6 +360,7 @@ export const FeedbackProvider = ({ children }) => {
         anonymous: 0,
         averageRating: 0,
         satisfactionRate: 0,
+        todayCount: 0,
       });
       return true;
     } catch (error) {
