@@ -291,7 +291,11 @@ export const FeedbackProvider = ({ children }) => {
 
     // Calculate today's feedback count
     const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
     const todayCount = feedbacks.filter((f) => {
       const feedbackDate = new Date(f.timestamp);
       return feedbackDate >= todayStart;

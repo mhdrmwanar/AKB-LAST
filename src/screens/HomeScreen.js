@@ -66,7 +66,6 @@ export default function HomeScreen({ navigation }) {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Powered by React Native</Text>
       </View>
     </View>
   );
@@ -232,10 +231,5 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     paddingBottom: 20,
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#546E7A',
-    opacity: 0.6,
   },
 });
